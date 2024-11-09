@@ -1,0 +1,27 @@
+specVersion: 0.0.2
+description: Track USDC transfers to a specific address on Sepolia
+repository: https://github.com/your-username/usdc-transfer-tracker
+
+schema:
+  file: ./schema.graphql
+
+dataSources:
+  - kind: ethereum/contract
+    name: USDC
+    network: sepolia
+    source:
+      address: "0xMockUSDCContractAddress1234567890abcdef" # Replace with actual USDC contract address
+      abi: USDC
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - Transfer
+      abis:
+        - name: USDC
+          file: ./abis/USDC.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/mapping.ts
