@@ -1,0 +1,23 @@
+{
+    "name": "signature-verifier",
+    "version": "1.0.0",
+    "description": "Modular Signature Scheme Verification Algorithm",
+    "main": "index.js",
+    "scripts": {
+      "test": "hardhat test",
+      "deploy": "hardhat run scripts/deploy.js --network sepolia"
+    },
+    "keywords": [],
+    "author": "Your Name",
+    "license": "MIT",
+    "devDependencies": {
+      "@nomiclabs/hardhat-ethers": "^2.0.6",
+      "@nomiclabs/hardhat-waffle": "^2.0.4",
+      "chai": "^4.3.7",
+      "ethereum-waffle": "^3.4.4",
+      "ethers": "^6.6.1",
+      "hardhat": "^2.17.0"
+    },
+    "dependencies": {}
+  }
+  
