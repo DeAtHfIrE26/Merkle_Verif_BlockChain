@@ -403,7 +403,7 @@ Comprehensive Testing: Ensure all possible scenarios are tested to maintain syst
 Clear Documentation: Maintain thorough documentation for ease of understanding and collaboration.
 Version Control: Use Git effectively to manage changes and collaborate with others.
 Environment Management: Use environment variables and .gitignore to protect sensitive information.
-Copy code
+
 
 <img width="2000rem" src="https://raw.githubusercontent.com/SamirPaulb/SamirPaulb/main/assets/rainbow-superthin.webp"><br>
 
