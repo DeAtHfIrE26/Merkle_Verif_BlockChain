@@ -2,7 +2,7 @@
 
 <!-- Futuristic Header -->
 <div align="center">
-  <img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0:3d85c6,100:00ffff&height=200&section=header&text=Charter-21BCE0216&fontSize=70&fontColor=fff&animation=fadeIn&fontAlignY=38&desc=Merkle%20Proof%20Verification%20%7C%20USDC%20Transfer%20Tracker%20%7C%20Signature%20Verifier&descAlignY=60&descAlign=50" />
+  <img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0:3d85c6,100:00ffff&height=200&section=header&text=Merkle_Verif_BlockChain&fontSize=70&fontColor=fff&animation=fadeIn&fontAlignY=38&desc=Merkle%20Proof%20Verification%20%7C%20USDC%20Transfer%20Tracker%20%7C%20Signature%20Verifier&descAlignY=60&descAlign=50" />
 </div>
 
 <img width="2000rem" src="https://raw.githubusercontent.com/SamirPaulb/SamirPaulb/main/assets/rainbow-superthin.webp"><br>
