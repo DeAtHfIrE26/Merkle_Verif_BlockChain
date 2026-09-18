@@ -1,0 +1,26 @@
+{
+  "name": "@merkle-verify/contracts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Solidity verifiers for Merkle inclusion proofs and ECDSA signatures.",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
+    "set-root": "hardhat run scripts/setMerkleRoot.js --network sepolia",
+    "clean": "hardhat clean"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "2.0.8",
+    "@nomicfoundation/hardhat-ethers": "3.0.8",
+    "@openzeppelin/contracts": "4.9.6",
+    "chai": "4.5.0",
+    "dotenv": "16.4.5",
+    "ethers": "6.13.4",
+    "hardhat": "2.22.15",
+    "solc": "0.8.18"
+  },
+  "dependencies": {
+    "@merkle-verify/core": "*"
+  }
+}
