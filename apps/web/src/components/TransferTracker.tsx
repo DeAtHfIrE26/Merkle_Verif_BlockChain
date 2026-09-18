@@ -166,7 +166,7 @@ export function TransferTracker() {
           )}
         </Panel>
 
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-5">
           <Panel
             title="The real query"
             description="What a deployed subgraph would be asked, verbatim."

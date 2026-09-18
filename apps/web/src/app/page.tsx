@@ -32,7 +32,7 @@ export default function Home() {
     <>
       <section className="mx-auto max-w-content px-4 pb-16 pt-12 sm:px-6 sm:pt-20">
         <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="animate-fade-up">
+          <div className="min-w-0 animate-fade-up">
             <Badge tone="brand">
               <span aria-hidden="true">●</span> No wallet, no sign-up, nothing to install
             </Badge>
@@ -86,7 +86,7 @@ export default function Home() {
             </dl>
           </div>
 
-          <div className="animate-fade-up [animation-delay:120ms]">
+          <div className="min-w-0 animate-fade-up [animation-delay:120ms]">
             <HeroTree />
           </div>
         </div>

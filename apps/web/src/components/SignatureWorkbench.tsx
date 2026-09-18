@@ -119,7 +119,7 @@ function SignatureWorkbench({ onRegenerate }: { onRegenerate: () => void }) {
       />
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-5">
           <Panel
             title="Signer"
             description="A throwaway key, generated in this browser and never sent anywhere."
@@ -182,7 +182,7 @@ function SignatureWorkbench({ onRegenerate }: { onRegenerate: () => void }) {
           </Panel>
         </div>
 
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-5">
           <Panel
             title="Signature"
             description="Paste one from elsewhere, or sign with the burner key."

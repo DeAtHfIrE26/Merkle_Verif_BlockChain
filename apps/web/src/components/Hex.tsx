@@ -44,7 +44,7 @@ export function Hex({ value, truncate = false, className, label }: HexProps) {
         className,
       )}
     >
-      <span className={cn('truncate', truncate && 'shrink-0')}>
+      <span className={cn('min-w-0 truncate', truncate && 'shrink-0')}>
         {truncate ? truncateHex(value, 10, 8) : value}
       </span>
       <span

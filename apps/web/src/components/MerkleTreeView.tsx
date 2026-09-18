@@ -115,10 +115,17 @@ export function MerkleTreeView({
   const pathColor = broken ? '#F4527A' : '#7C6BF5';
 
   return (
-    <div className={cn('w-full overflow-x-auto', className)}>
+    <div className={cn('w-full min-w-0 overflow-x-auto', className)}>
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        className="h-auto w-full min-w-[320px]"
+        className="h-auto w-full"
+        style={
+          // Wide trees scroll inside this box rather than stretching the page;
+          // small ones just scale down with the viewBox.
+          !compact && tree.layers[0]!.length > 16
+            ? { minWidth: `${Math.min(tree.layers[0]!.length * 28, 1200)}px` }
+            : undefined
+        }
         role="img"
         aria-label={
           leafIndex === null

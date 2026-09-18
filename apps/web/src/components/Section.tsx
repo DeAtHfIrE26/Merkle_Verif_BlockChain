@@ -40,7 +40,7 @@ export function Panel({
   actions?: ReactNode;
 }) {
   return (
-    <section className={cn('card p-5', className)}>
+    <section className={cn('card min-w-0 p-5', className)}>
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <h2 className="text-sm font-semibold text-ink-100">{title}</h2>

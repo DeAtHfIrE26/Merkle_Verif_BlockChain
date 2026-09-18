@@ -92,7 +92,15 @@ export function MerkleExplorer() {
   const verdict = useMemo(() => {
     if (!tree || !leaf) return null;
     const ok = verifyProof(leaf, activeProof, tree.root);
-    return { ok, computedRoot: processProof(leaf, activeProof) };
+    // processProof rejects malformed elements by throwing, and the proof box is
+    // freely editable, so the computed root is best-effort for display only.
+    let computedRoot: string | null;
+    try {
+      computedRoot = processProof(leaf, activeProof);
+    } catch {
+      computedRoot = null;
+    }
+    return { ok, computedRoot };
   }, [tree, leaf, activeProof]);
 
   const isTampered = tamperedProof !== null;
@@ -135,7 +143,7 @@ export function MerkleExplorer() {
       />
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-5">
           <Panel
             title="Leaf values"
             description="One per line. Hex is hashed by its bytes; anything else as UTF-8."
@@ -222,7 +230,7 @@ export function MerkleExplorer() {
           ) : null}
         </div>
 
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-5">
           {build.status === 'empty' ? (
             <EmptyState onLoadSample={() => setInput(SAMPLE_INPUT)} />
           ) : build.status === 'error' ? (
@@ -332,7 +340,9 @@ export function MerkleExplorer() {
                           <div className="flex flex-wrap items-baseline gap-2">
                             <dt className="w-28 shrink-0 text-ink-500">Computed root</dt>
                             <dd className="font-mono text-invalid-text">
-                              {truncateHex(verdict.computedRoot, 14, 10)}
+                              {verdict.computedRoot
+                                ? truncateHex(verdict.computedRoot, 14, 10)
+                                : 'not computable — a proof element is not 32 bytes'}
                             </dd>
                           </div>
                         </dl>
