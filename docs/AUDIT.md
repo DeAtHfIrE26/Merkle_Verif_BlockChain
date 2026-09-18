@@ -146,7 +146,7 @@ Two consequences that shape the plan:
 
 `signature-verifier/hardhat.config.js:8` commits an **Infura project ID**:
 ```js
-url: "https://sepolia.infura.io/v3/21155fa07fa947d09b9cf7c600fd1f67",
+url: "https://sepolia.infura.io/v3/<REDACTED-32-HEX-PROJECT-ID>",
 accounts: ["0x1234567890abcdef1234567890abcdef12345678"]
 ```
 - The project ID is a **real credential** (32 hex chars, correct Infura shape) sitting in a public repo since 2024‑11. I could not test whether it is still live — `sepolia.infura.io` is blocked here. **Treat it as live and rotate it.**
