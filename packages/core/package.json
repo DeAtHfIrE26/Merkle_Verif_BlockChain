@@ -14,7 +14,9 @@
       "require": "./dist/cjs/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "npm run build:esm && npm run build:cjs && node scripts/write-dist-manifests.mjs",
     "build:esm": "tsc -p tsconfig.build.json",
@@ -23,6 +25,11 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "dependencies": { "viem": "2.21.45" },
-  "devDependencies": { "typescript": "5.6.3", "vitest": "2.1.5" }
+  "dependencies": {
+    "viem": "2.56.8"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vitest": "5.0.1"
+  }
 }
