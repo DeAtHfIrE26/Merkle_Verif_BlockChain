@@ -47,3 +47,6 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 *.swp
+
+# typescript incremental build cache
+*.tsbuildinfo
