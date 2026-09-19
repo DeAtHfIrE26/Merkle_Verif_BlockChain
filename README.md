@@ -30,7 +30,12 @@ Three tools, no credentials of any kind:
 
 ## Live demo
 
-**Not yet deployed.** Creating a Vercel project was refused for this repository's automation credentials (`403 forbidden — You don't have permission to create the project`), so the final deploy step needs a human. The repository is configured and the production build is verified; [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) has the two-minute import, and a GitHub Pages workflow is wired as a zero-setup alternative.
+**Not yet deployed** — one repository setting away.
+
+Set **Settings → Pages → Build and deployment → Source: "GitHub Actions"**, then re-run the *Deploy to GitHub Pages* workflow, and the site publishes to
+`https://deathfire26.github.io/Merkle_Verif_BlockChain/`. A workflow cannot switch Pages on by itself: creating a Pages site needs admin scope that the automatic `GITHUB_TOKEN` does not carry.
+
+The Vercel route is also ready (import the repo, root directory `apps/web`, no environment variables) — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Everything is built and CI-verified; only the hosting switch remains.
 
 Run it locally in under a minute — see [Getting started](#getting-started).
 

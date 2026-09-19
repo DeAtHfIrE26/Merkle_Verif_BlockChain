@@ -81,7 +81,7 @@ Stated plainly rather than left for you to discover.
 | Not tested | Why |
 |---|---|
 | **On-chain verification against a deployed contract** | No contract is deployed (your decision), and **every Ethereum RPC is blocked from the sandbox this was built in** — `infura.io`, `rpc.sepolia.org`, `publicnode`, `alchemy` all refused at the egress proxy. The code path exists behind `NEXT_PUBLIC_MERKLE_VERIFIER_ADDRESS` and is **unverified by me**. Treat it as untested until you deploy and try it. |
-| **The live deployed URL** | Not deployed. Creating a Vercel project is forbidden for this session's credentials (HTTP 403, `You don't have permission to create the project`), and the inline-deploy tool is disabled server-side. See `docs/DEPLOYMENT.md`. Everything else was verified against the real production build locally. |
+| **The live deployed URL** | Not deployed yet. Two independent blockers, both needing a repository admin: creating a Vercel project is forbidden for this session's credentials (HTTP 403), and GitHub Pages cannot be switched on from a workflow (`Resource not accessible by integration`). See `docs/DEPLOYMENT.md`. Everything else is verified against the real production build, locally and in CI on `main`. |
 | **Wallet / MetaMask flows** | Deliberately absent. The app never asks for a wallet. |
 | **Real subgraph queries and FCM push** | Cut, and the Transfer Tracker says so on the page. |
 | **Cross-browser (Firefox, Safari/WebKit)** | Only Chromium is available in the build sandbox. The app uses no browser-specific APIs beyond `crypto.getRandomValues` and `navigator.clipboard`, and clipboard failures are already caught and ignored. Worth a manual check on Safari. |

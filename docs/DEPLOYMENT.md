@@ -1,6 +1,8 @@
 # Deployment
 
-**Current status: not deployed.** Everything is ready and verified locally against the real production build; the one remaining step needs an action only you can take. This document says exactly what and why.
+**Current status: not deployed.** Everything is ready and verified locally and in CI; the remaining step needs an action only a repository admin can take. This document says exactly what and why.
+
+**Shortest path to a live site:** set **Settings → Pages → Source: "GitHub Actions"**, then re-run the *Deploy to GitHub Pages* workflow. That is the whole thing — no accounts, no credentials, no configuration.
 
 ---
 
@@ -51,16 +53,32 @@ Hobby is non-commercial only. A personal portfolio piece is within that.
 
 > **Note on free-tier figures.** Vercel's own docs were unreachable from the sandbox this was built in (`vercel.com` is blocked by the egress proxy), so specific Hobby limits could not be verified against the primary source. The design sidesteps them by using none of the constrained resources, but do not quote numbers from this repo as authoritative.
 
-## Option B — GitHub Pages (already wired, zero setup)
+## Option B — GitHub Pages (one setting, then automatic)
 
 The app also builds to a fully static bundle, and `.github/workflows/pages.yml` publishes it.
 
-- Triggers on push to `main`, or manually via **Actions → Deploy to GitHub Pages → Run workflow**.
-- `actions/configure-pages` runs with `enablement: true`, so it switches Pages on by itself — no repository settings to change first.
+**Required once, by a repository admin:**
+
+> **Settings → Pages → Build and deployment → Source: "GitHub Actions"**
+
+A workflow cannot do this for you. Creating a Pages site needs admin scope, which
+the automatic `GITHUB_TOKEN` does not have even when the workflow grants
+`pages: write`. An earlier version of this workflow used
+`actions/configure-pages` with `enablement: true` expecting it to self-enable; on
+its first run it failed with:
+
+```
+Get Pages site failed.    Error: Not Found
+Create Pages site failed. Error: Resource not accessible by integration
+```
+
+After the source is set, every push to `main` publishes automatically, and the
+workflow can also be run by hand from **Actions → Deploy to GitHub Pages → Run
+workflow**.
+
 - The resulting URL is `https://deathfire26.github.io/Merkle_Verif_BlockChain/`.
 - `PAGES_BASE_PATH` handles the `/Merkle_Verif_BlockChain` subpath automatically.
-
-One caveat: GitHub's `github-pages` environment restricts deployments to the default branch by default, so this runs once the work is merged to `main`.
+- GitHub's `github-pages` environment restricts deployments to the default branch, so this publishes from `main`.
 
 Verified locally: `STATIC_EXPORT=true npm run build` produces `out/`, and the full Playwright suite passes 100/100 against that bundle served as plain files.
 

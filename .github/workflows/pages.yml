@@ -1,8 +1,14 @@
 name: Deploy to GitHub Pages
 
-# The app is fully static, so it can be published straight to Pages at no cost
-# and with nothing to configure. This is the fallback host; see
-# docs/DEPLOYMENT.md for the Vercel route, which is the primary target.
+# The app is fully static, so it publishes straight to Pages at no cost.
+#
+# ONE-TIME SETUP: GitHub Pages must be switched on for this repository first --
+#   Settings -> Pages -> Build and deployment -> Source: "GitHub Actions"
+# A workflow cannot do this for you. Creating a Pages site needs admin scope,
+# which the automatic GITHUB_TOKEN does not have even with `pages: write`, so
+# `actions/configure-pages` with `enablement: true` fails with
+# "Resource not accessible by integration". Once the source is set, every push
+# to main publishes automatically and no further setup is needed.
 on:
   push:
     branches: [main]
@@ -29,13 +35,9 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
-      # `enablement: true` turns Pages on for the repository if it is off, so
-      # this workflow needs no manual setup step before its first run.
       - name: Configure Pages
         id: pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Install dependencies
         run: npm ci
