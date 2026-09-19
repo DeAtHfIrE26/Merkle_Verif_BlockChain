@@ -4,8 +4,17 @@ import nextPlugin from '@next/eslint-plugin-next';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 export default tseslint.config(
-  { ignores: ['.next/**', 'node_modules/**', 'next-env.d.ts', 'e2e/**', 'playwright.config.ts'] },
+  {
+    ignores: ['.next/**', 'out/**', 'node_modules/**', 'next-env.d.ts', 'e2e/**', 'playwright.config.ts'],
+  },
   js.configs.recommended,
+  {
+    // Build-time config files run in Node, not the browser.
+    files: ['*.mjs', '*.config.ts'],
+    languageOptions: {
+      globals: { process: 'readonly', __dirname: 'readonly', module: 'writable' },
+    },
+  },
   ...tseslint.configs.recommended,
   {
     files: ['**/*.{ts,tsx}'],

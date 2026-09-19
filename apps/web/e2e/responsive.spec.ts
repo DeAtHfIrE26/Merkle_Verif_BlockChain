@@ -37,7 +37,7 @@ test.describe('mobile navigation', () => {
     const menu = page.locator('#mobile-menu');
     await expect(menu).toBeVisible();
     await menu.getByRole('link', { name: 'Signatures' }).click();
-    await expect(page).toHaveURL(/\/signatures$/);
+    await expect(page).toHaveURL(/\/signatures\/?$/);
   });
 });
 
