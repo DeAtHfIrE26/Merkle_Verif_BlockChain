@@ -1,6 +1,6 @@
 # Testing
 
-**226 automated tests across three layers, all passing.** Every number below was produced by running the suites, not estimated.
+**278 automated tests across three layers, all passing.** Every number below was produced by running the suites, not estimated.
 
 ```
 npm run verify        # lint + typecheck + unit + contract + production build
@@ -121,3 +121,28 @@ bundle: **100 passed (1.3m)**.
 This is worth stating plainly because it is the failure mode the whole suite
 exists to prevent — a verification step that reports green, or red, for reasons
 that have nothing to do with the thing being verified.
+
+## Differential testing against OpenZeppelin
+
+The `standard` leaf encoding claims to reproduce OpenZeppelin's
+`StandardMerkleTree`. Claims like that are exactly what this project does not
+take on trust, so `@openzeppelin/merkle-tree` is a dev dependency and
+`packages/core/src/leaves.test.ts` tests against the real thing.
+
+For leaf counts 1, 2, 3, 4, 5, 7, 8, 9, 16, 17, 31 and 64 it asserts:
+
+- the roots match;
+- every proof matches OpenZeppelin's element for element;
+- `StandardMerkleTree.verify` — OpenZeppelin's own verifier — accepts the proofs
+  this package generates.
+
+The odd counts are the point. The two schemes agree trivially on powers of two
+and diverge everywhere else, because OpenZeppelin builds a complete binary tree
+in a flat array while this project's own scheme pairs whole layers and promotes
+an unpaired node. A first attempt here matched only the leaf *hashing* and
+passed 1/2/4/8/16/64 while failing 3/5/7/9/17/31 — which is precisely the shape
+of bug that ships when a compatibility claim is asserted instead of tested.
+
+This sits alongside the existing TypeScript↔Solidity parity suite: two
+independent differential tests, one against this project's own contract, one
+against the library the ecosystem actually uses.

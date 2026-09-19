@@ -67,7 +67,7 @@ export default function Home() {
 
             <dl className="mt-10 grid max-w-lg grid-cols-3 gap-4 border-t border-ink-700 pt-6">
               {[
-                ['226', 'automated tests'],
+                ['278', 'automated tests'],
                 ['0', 'credentials needed'],
                 ['100%', 'client-side'],
               ].map(([value, label]) => (

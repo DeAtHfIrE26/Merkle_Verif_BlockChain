@@ -29,6 +29,7 @@
     "viem": "2.56.8"
   },
   "devDependencies": {
+    "@openzeppelin/merkle-tree": "^1.0.8",
     "typescript": "5.9.3",
     "vitest": "3.2.7"
   }
