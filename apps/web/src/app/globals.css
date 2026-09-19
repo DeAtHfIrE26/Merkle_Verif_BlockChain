@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  * {
+    @apply border-ink-700;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-ink-950 text-ink-100 antialiased;
+    /* A single very soft violet wash anchors the page without competing with
+       the emerald/rose verification states. */
+    background-image: radial-gradient(
+      ellipse 80% 50% at 50% -10%,
+      rgba(124, 107, 245, 0.13),
+      transparent 70%
+    );
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+
+  /* Visible focus everywhere, never removed — only restyled. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-bright ring-offset-2 ring-offset-ink-950;
+  }
+
+  /* Hex strings must stay scannable and align column-to-column. */
+  .font-mono {
+    font-variant-ligatures: none;
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    @apply bg-brand/30 text-ink-100;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-ink-950;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full border-2 border-ink-950 bg-ink-700;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-ink-600;
+  }
+}
+
+@layer components {
+  .skip-link {
+    @apply absolute left-4 top-4 z-50 -translate-y-24 rounded-lg bg-brand px-4 py-2
+           text-sm font-medium text-white transition-transform focus:translate-y-0;
+  }
+
+  .card {
+    @apply rounded-2xl border border-ink-700 bg-ink-850/70 backdrop-blur-sm;
+  }
+
+  .skeleton {
+    @apply rounded bg-gradient-to-r from-ink-800 via-ink-700 to-ink-800 bg-[length:200%_100%]
+           animate-shimmer;
+  }
+}
+
+/* Respect the OS setting: disable motion rather than merely shortening it. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

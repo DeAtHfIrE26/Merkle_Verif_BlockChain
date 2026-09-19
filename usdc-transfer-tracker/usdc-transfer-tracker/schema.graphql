@@ -1,9 +1,0 @@
-type Transfer @entity {
-  id: ID!
-  from: Bytes!
-  to: Bytes!
-  value: BigInt!
-  timestamp: BigInt!
-  blockNumber: BigInt!
-  transactionHash: Bytes!
-}

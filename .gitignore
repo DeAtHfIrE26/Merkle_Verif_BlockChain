@@ -1,0 +1,52 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# environment — never commit real values, see .env.example
+.env
+.env.*
+!.env.example
+
+# next.js
+.next/
+out/
+next-env.d.ts
+
+# production builds
+build/
+dist/
+
+# hardhat
+artifacts/
+cache/
+typechain-types/
+packages/contracts/artifacts/
+packages/contracts/cache/
+
+# testing
+coverage/
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
+# vercel
+.vercel
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# typescript incremental build cache
+*.tsbuildinfo
