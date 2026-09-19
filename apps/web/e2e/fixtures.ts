@@ -59,7 +59,18 @@ export async function pasteLargeValue(locator: Locator, value: string) {
 }
 
 /** Wait for the app shell to be interactive. */
+/**
+ * Turn an app path into one that resolves against the baseURL's *path*.
+ *
+ * `new URL('/merkle', 'http://host/Repo/')` yields `http://host/merkle` -- a
+ * leading slash replaces the whole path. Dropping it gives `http://host/Repo/merkle`,
+ * which is what a project-site deployment actually serves.
+ */
+export function appPath(path: string): string {
+  return path.replace(/^\/+/, '');
+}
+
 export async function gotoAndSettle(page: Page, path: string) {
-  await page.goto(path);
+  await page.goto(appPath(path));
   await page.waitForLoadState('networkidle');
 }

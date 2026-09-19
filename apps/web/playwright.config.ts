@@ -17,7 +17,12 @@ const PREINSTALLED_CHROMIUM = '/opt/pw-browsers/chromium-1194/chrome-linux/chrom
 const launchOptions = existsSync(PREINSTALLED_CHROMIUM)
   ? { executablePath: PREINSTALLED_CHROMIUM }
   : {};
-const baseURL = process.env.BASE_URL ?? 'http://127.0.0.1:3100';
+// A trailing slash is load-bearing. Playwright resolves a relative goto() with
+// `new URL(path, baseURL)`, and without it the last path segment is treated as a
+// filename and dropped -- so a subpath deployment such as
+// https://user.github.io/Repo would silently be tested at the domain root.
+const rawBaseURL = process.env.BASE_URL ?? 'http://127.0.0.1:3100';
+const baseURL = rawBaseURL.endsWith('/') ? rawBaseURL : `${rawBaseURL}/`;
 const isRemote = Boolean(process.env.BASE_URL);
 
 export default defineConfig({
