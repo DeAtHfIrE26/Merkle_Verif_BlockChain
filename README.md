@@ -1,616 +1,147 @@
-<img width="2000rem" src="https://raw.githubusercontent.com/SamirPaulb/SamirPaulb/main/assets/rainbow-superthin.webp"><br>
-
-<!-- Futuristic Header -->
 <div align="center">
-  <img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0:3d85c6,100:00ffff&height=200&section=header&text=Merkle_Verif_BlockChain&fontSize=70&fontColor=fff&animation=fadeIn&fontAlignY=38&desc=Merkle%20Proof%20Verification%20%7C%20USDC%20Transfer%20Tracker%20%7C%20Signature%20Verifier&descAlignY=60&descAlign=50" />
+
+# Merkle Verify
+
+**Prove a thing belongs — without trusting anyone.**
+
+A browser-native toolkit for Merkle inclusion proofs and ECDSA signer recovery, cross-checked against the same verification logic written in Solidity.
+
+[![CI](https://github.com/DeAtHfIrE26/Merkle_Verif_BlockChain/actions/workflows/ci.yml/badge.svg)](https://github.com/DeAtHfIrE26/Merkle_Verif_BlockChain/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-226%20passing-2DD4A7)](docs/TESTING.md)
+[![License](https://img.shields.io/badge/license-MIT-7C6BF5)](LICENSE)
+
 </div>
-
-<img width="2000rem" src="https://raw.githubusercontent.com/SamirPaulb/SamirPaulb/main/assets/rainbow-superthin.webp"><br>
-
-<!-- Animated Introduction -->
-<div align="center">
-  <a href="https://git.io/typing-svg">
-    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=22&duration=3000&pause=1000&color=00FFFF&center=true&vCenter=true&width=650&lines=Welcome+to+Charter-21BCE0216!;Exploring+Blockchain+Innovations;Enhancing+Security+with+Advanced+Verification;Monitoring+USDC+Transfers+Efficiently;Verifying+Signatures+with+Modular+Algorithms" alt="Typing SVG" />
-  </a>
-</div>
-
-<img width="2000rem" src="https://raw.githubusercontent.com/SamirPaulb/SamirPaulb/main/assets/rainbow-superthin.webp"><br>
-
-# 💫 About This Monorepo:
-### Blockchain Enthusiast | Smart Contract Developer | Blockchain Security Specialist
-
-- <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Globe%20Showing%20Asia-Australia.png" alt="Globe Showing Asia-Australia" width="25" align="center" /> Comprehensive projects focused on Ethereum blockchain, smart contract development, and signature verification.
-- <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Graduation%20Cap.png" alt="Graduation Cap" width="25" align="center" /> Dedicated to enhancing blockchain security and transaction monitoring.
-- <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Rocket.png" alt="Rocket" width="25" align="center" /> Continuously learning and implementing advanced cryptographic techniques.
-- <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Hand%20gestures/Handshake.png" alt="Handshake" width="25" align="center" /> Open to collaborations and contributions on innovative blockchain projects.
-- <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Gem%20Stone.png" alt="Gem Stone" width="25" align="center" /> **2024 Goals:** Mastering smart contract security, exploring new signature schemes, and contributing to open-source blockchain tools.
 
 ---
-<img width="2000rem" src="https://raw.githubusercontent.com/SamirPaulb/SamirPaulb/main/assets/rainbow-superthin.webp"><br>
 
-<h2 align="center"><img src="https://raw.githubusercontent.com/ShahriarShafin/ShahriarShafin/main/Assets/handshake.gif" width="50px" style="max-width: 100%; user-select: auto;"> Connect with Me </h2>
+## What it does
 
-<p align="center">
-  <a href="https://www.linkedin.com/in/kashyap-patel2673/" target="_blank"><img align="center" src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="Your Name LinkedIn" /></a>
-  <a href="https://www.instagram.com/._k.a.s.h.y.a.p._/profilecard/?igsh=MXJuY2dkeTY2ZDJyaA==" target="_blank"><img align="center" src="https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white" alt="Your Name Instagram" /></a>
-  <a href="mailto:kashyappatel2673@gmail.com"><img align="center" src="https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="Email Your Name" /></a>
-  <a href="tel:+919898318841"><img align="center" src="https://img.shields.io/badge/Contact-4285F4?style=for-the-badge&logo=google-voice&logoColor=white" alt="Contact Your Name" /></a>
-</p>
+A Merkle proof shows that one transaction is inside a block using a handful of hashes instead of the whole block. This toolkit builds those proofs, verifies them, and **breaks them on purpose** so you can see exactly what they guarantee.
 
-<img width="2000rem" src="https://raw.githubusercontent.com/SamirPaulb/SamirPaulb/main/assets/rainbow-superthin.webp"><br>
+Three tools, no credentials of any kind:
 
-<img src="https://media2.giphy.com/media/QssGEmpkyEOhBCb7e1/giphy.gif?cid=ecf05e47a0n3gi1bfqntqmob8g9aid1oyj2wr3ds3mg700bl&rid=giphy.gif" width ="25"><b> Projects</b>
-<img width="2000rem" src="https://raw.githubusercontent.com/SamirPaulb/SamirPaulb/main/assets/rainbow-superthin.webp"><br>
+| Tool | What you can do |
+|---|---|
+| **Merkle Proof Explorer** | Build a tree from any values, click any leaf to get its inclusion proof, then tamper with the proof and watch verification fail — with the computed root shown next to the expected one. |
+| **Signature Verifier** | Sign a message with a throwaway key generated in your browser, then recover the signer. Shows **EIP-191 and raw** recovery side by side. |
+| **Transfer Tracker** | A token transfer feed rendered from simulated data, next to the subgraph query a live deployment would run. Labelled as simulated on every surface. |
 
-<!-- Futuristic Header -->
-<div align="center">
-  <img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0:3d85c6,100:00ffff&height=200&section=header&text=Task1%3A%20Merkle%20Proof%20Verification&fontSize=60&fontColor=fff&animation=fadeIn&fontAlignY=38&desc=Ensuring+Data+Integrity+with+Merkle+Trees&descAlignY=60&descAlign=50" />
-</div>
+> **No wallet. No sign-up. No API keys. Nothing to install.** Every computation runs locally in your browser. There is no demo account because there is no account.
 
-<img width="2000rem" src="https://raw.githubusercontent.com/SamirPaulb/SamirPaulb/main/assets/rainbow-superthin.webp"><br>
+## Live demo
 
-# 🛠️ Task 1: Merkle Proof Verification
+**Not yet deployed.** Creating a Vercel project was refused for this repository's automation credentials (`403 forbidden — You don't have permission to create the project`), so the final deploy step needs a human. The repository is configured and the production build is verified; [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) has the two-minute import, and a GitHub Pages workflow is wired as a zero-setup alternative.
 
-## 📄 Overview
+Run it locally in under a minute — see [Getting started](#getting-started).
 
-The **Merkle Proof Verification** project implements a robust system to verify the integrity and inclusion of data within a Merkle Tree. Merkle Trees are fundamental in blockchain technologies for ensuring data consistency and security. This project leverages smart contracts to perform on-chain verification of Merkle proofs, enhancing trust and transparency in decentralized applications.
+## Why this is interesting
 
-## 🌟 Features
+**The same Merkle logic exists twice: TypeScript that runs in your browser, and Solidity that would run on-chain.** If those two ever disagreed, the app would show a proof as valid that the chain rejects.
 
-- **Efficient Verification**: Quickly verifies whether a given leaf is part of a Merkle Tree.
-- **Smart Contract Integration**: Deploys verification logic on the Ethereum blockchain.
-- **Flexible Implementation**: Supports various hashing algorithms compatible with Merkle Trees.
-- **Comprehensive Testing**: Includes unit tests to ensure reliability and correctness.
-- **Gas Optimization**: Optimized for minimal gas consumption during verification.
+So they are pinned together by a differential test suite. It builds randomised trees across **17 shapes** — powers of two, odd counts that force node promotion, primes — and asserts both implementations agree on every leaf, every tampered proof, every foreign leaf, and truncated and extended proofs alike. A deterministic PRNG seeds every case, so a failure is reproducible from the seed alone.
 
-## 🔧 Setup
+Two things the app deliberately surfaces rather than hides:
 
-### Prerequisites
+- **The EIP-191 trap.** Wallets never sign raw bytes; they prepend `"\x19Ethereum Signed Message:\n32"`. Verify against the wrong one and nothing errors — recovery still returns an address, just a stranger's. The Signature Verifier shows both results at once.
+- **Second preimages in sorted-pair trees.** Leaves and internal nodes are both 32 bytes, so an internal node can be replayed as a leaf and will verify. The Explorer warns you when it spots one, and a contract test demonstrates it.
 
-- **Node.js** (v14.x or later)
-- **npm** (v6.x or later)
-- **Hardhat**: Ethereum development environment
-- **MetaMask**: For managing Ethereum accounts and interacting with the blockchain
-- **Infura Account**: To access Ethereum nodes
+## Screenshots
 
-### 1. Clone the Repository
+| | |
+|---|---|
+| ![Landing page](docs/images/landing.png) | ![Merkle Proof Explorer](docs/images/merkle-explorer.png) |
+| The landing page, with a live proof path cycling through the tree. | The Explorer after tampering — the proof no longer reaches the root. |
+| ![Signature Verifier](docs/images/signatures.png) | ![Mobile](docs/images/mobile.png) |
+| Both recovery modes side by side; only the matching one returns the signer. | 360px. Every layout is checked for overflow at 360, 768 and 1280. |
+
+## Architecture
+
+```
+apps/web/            Next.js 16 · React 19 · TypeScript · Tailwind — the UI
+packages/core/       Framework-free crypto: Merkle build/prove/verify, ECDSA recovery
+packages/contracts/  Solidity verifiers + the differential test suite
+docs/                AUDIT · PLAN · TESTING · DEPLOYMENT
+```
+
+`packages/core` is the keystone: it is imported by **both** the web app and the contract tests, which is what makes the TypeScript-versus-Solidity parity testing possible.
+
+Every route is prerendered as static content. There are no serverless functions, no database, no cron jobs and no runtime environment variables — so there is no free tier that can lapse, no cold start, and nothing that sleeps after a month of no visitors.
+
+## Tech stack, and why
+
+| Choice | Reason |
+|---|---|
+| **Next.js 16 + TypeScript** | Static export and Vercel-native deploy from one codebase; types matter for hex-shaped data. |
+| **Tailwind** | Design tokens in CSS, no config drift, small output. |
+| **viem** | Modern, tree-shakeable, excellent types — roughly a tenth of ethers for the few primitives needed. |
+| **Hardhat + ethers v6** | Replaces the abandoned Waffle stack the project inherited, which could not even `npm install`. |
+| **Vitest + Playwright** | Fast unit runs; real browser coverage on desktop and mobile viewports. |
+| **solc from npm** | Same compiler as the official binaries, resolved from the lockfile, so builds work offline and in sandboxed CI. |
+
+## Getting started
+
+Requires **Node 22** (`.nvmrc` is provided).
 
 ```bash
-git clone https://github.com/DeAtHfIrE26/charter-21BCE0216.git
-cd charter-21BCE0216/merkle-proof-verification
-```
-### 2. Install Dependencies
-bash
-Copy code
-npm install
-
-### 3. Configure Environment Variables
-Create a .env file in the merkle-proof-verification directory with the following content:
-
-env
-Copy code
-INFURA_PROJECT_ID=your_infura_project_id
-PRIVATE_KEY=your_private_key
-Note:
-
-Replace your_infura_project_id with your actual Infura project ID.
-Replace your_private_key with your Ethereum account's private key on Sepolia. Never expose your private key publicly.
-
-### 4. Compile the Smart Contract
-bash
-
-npx hardhat compile
-
-### 5. Deploy the Smart Contract
-Ensure you have some Sepolia ETH for deployment.
-
-bash
-npx hardhat run scripts/deploy.js --network sepolia
-Expected Output:
-
-vbnet
-Deploying contracts with the account: 0xYourDeployerAddress
-MerkleProofVerifier deployed to: 0xDeployedContractAddress
-
-## 📜 Usage
-
-### Interacting with the Contract
-
-You can interact with the deployed `MerkleProofVerifier` contract using Hardhat scripts or a frontend interface.
-
-#### Example: Verifying a Merkle Proof
-
-```javascript
-const { ethers } = require("hardhat");
-
-async function verifyProof() {
-  const [deployer] = await ethers.getSigners();
-  const verifier = await ethers.getContractAt("MerkleProofVerifier", "0xDeployedContractAddress");
-
-  const leaf = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("Sample Leaf"));
-  const proof = [
-    "0xProofElement1...",
-    "0xProofElement2...",
-    // Add all necessary proof elements
-  ];
-  const root = "0xYourMerkleRoot";
-
-  const isValid = await verifier.verifyProof(leaf, proof, root);
-  console.log(`Is the proof valid? ${isValid}`);
-}
-
-verifyProof()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
-```
-## 🧪 Testing
-
-### 1. Run Unit Tests
-
-The project includes comprehensive tests to ensure the verification logic works as expected.
-
-```bash
-npx hardhat test
-```
-# Expected Output:
-  MerkleProofVerifier
-    ✓ Should verify a valid proof (X ms)
-    ✓ Should reject an invalid proof (X ms)
-
-  2 passing (X seconds)
-## 📂 Project Structure
-
-```plaintext
-merkle-proof-verification/
-├── contracts/
-│   └── MerkleProofVerifier.sol
-├── scripts/
-│   └── deploy.js
-├── test/
-│   └── MerkleProofVerifier.test.js
-├── hardhat.config.js
-├── package.json
-├── .env
-└── .gitignore
+git clone https://github.com/DeAtHfIrE26/Merkle_Verif_BlockChain.git
+cd Merkle_Verif_BlockChain
+npm ci
+npm run dev          # http://localhost:3000
 ```
 
-### 🔗 Related
-Hardhat Documentation
-Ethereum Documentation
-The Graph Protocol
-Merkle Trees Explained
-Infura
-MetaMask
+That is the whole setup. **No `.env` file is needed** — not for the app, not for the tests, not even to compile the contracts.
 
-### 📝 Best Practices
-Security Audits: Always perform security audits on your smart contracts to identify and fix vulnerabilities.
-Gas Optimization: Optimize your smart contracts to reduce gas costs during deployment and execution.
-Comprehensive Testing: Ensure all possible scenarios are tested to maintain contract reliability.
-Documentation: Maintain clear and thorough documentation for ease of understanding and collaboration.
-Version Control: Use Git effectively to manage changes and collaborate with others.
+### Scripts
 
-<img width="2000rem" src="https://raw.githubusercontent.com/SamirPaulb/SamirPaulb/main/assets/rainbow-superthin.webp"><br>
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start the app in development. |
+| `npm run build` | Production build (builds the shared package first). |
+| `npm run verify` | lint + typecheck + unit + contract tests + build. |
+| `npm run test:unit` | 85 tests — `packages/core`. |
+| `npm run test:contracts` | 41 tests — contracts, including TS↔Solidity parity. |
+| `npm run test:e2e` | 100 tests — Playwright on Chrome and Pixel 7. |
+| `npm run lint` · `npm run typecheck` | Static checks. |
 
-<!-- Futuristic Header -->
-<div align="center">
-  <img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0:3d85c6,100:00ffff&height=200&section=header&text=Task2%3A%20USDC%20Transfer%20Tracker&fontSize=60&fontColor=fff&animation=fadeIn&fontAlignY=38&desc=Real-time+Monitoring+and+Notification+System&descAlignY=60&descAlign=50" />
-</div>
+### Environment variables
 
-<img width="2000rem" src="https://raw.githubusercontent.com/SamirPaulb/SamirPaulb/main/assets/rainbow-superthin.webp"><br>
+The app requires **none**. [`.env.example`](.env.example) documents the optional ones, which only enable on-chain verification and contract deployment. Names and descriptions only — never values.
 
-# 🛠️ Task 2: USDC Transfer Tracker
+## Testing
 
-## 📄 Overview
+**226 tests, all passing:** 85 unit, 41 contract, 100 end-to-end. Every E2E test also fails on any console error, failed request or HTTP ≥ 400.
 
-The **USDC Transfer Tracker** is a comprehensive system designed to monitor incoming USDC (USD Coin) transfers to a specified Ethereum address on the Sepolia test network. It leverages **The Graph Protocol** for efficient indexing of blockchain data, a **backend service** for polling and push notifications via **Firebase Cloud Messaging (FCM)**, and a **React-based frontend dashboard** to display real-time transfer information.
+Full breakdown, including **what is deliberately not tested and why**, in [`docs/TESTING.md`](docs/TESTING.md).
 
-## 🌟 Features
+## Project history
 
-- **Real-time Monitoring**: Continuously tracks USDC transfers to a specified address.
-- **Push Notifications**: Sends instant notifications upon detecting new transfers.
-- **User-Friendly Dashboard**: Displays recent transfer details in an intuitive interface.
-- **Modular Design**: Easily extendable to support additional features or signature schemes.
-- **Scalable Architecture**: Designed to handle increasing volumes of transfer data efficiently.
-- **Secure Data Handling**: Ensures sensitive information is protected through environment variables and secure storage practices.
+This repository began as three disconnected assignment submissions. [`docs/AUDIT.md`](docs/AUDIT.md) is the read-only audit that preceded the rebuild, written before anything was changed. Among other things it found that:
 
-## 🔧 Setup
+- `npm install` failed outright in one sub-project, and four required dependencies were missing from another's `package.json` *and* its lockfile.
+- The signature verifier's only happy-path test **failed**, while three others passed vacuously — they asserted `false` against a contract that returned `false` for essentially everything.
+- The subgraph pointed at `0xMockUSDCContractAddress...`, which is not a valid address, so it had never been deployable.
+- An Infura project ID was committed to a public repository across 8 commits.
 
-### Prerequisites
+The audit is kept in the repository rather than quietly deleted, because the rebuild only makes sense next to it.
 
-- **Node.js** (v14.x or later)
-- **npm** (v6.x or later)
-- **Hardhat**: Ethereum development environment
-- **The Graph CLI**: For deploying subgraphs
-- **Firebase Account**: For push notifications
-- **Infura Account**: To access Ethereum nodes
-- **MetaMask**: For managing Ethereum accounts
+## Security notes
 
-### 1. Clone the Repository
+- **No secrets in this repository**, and none required to run it.
+- The committed Infura key was removed from the working tree. It remains in git history by deliberate choice — rewriting a public repository's history breaks every existing clone and fork, and rotating the key makes the old value worthless. **If you have not rotated it, do that.**
+- `npm audit --omit=dev` reports **zero vulnerabilities**. Remaining dev-only advisories live in Hardhat 2's transitive tree; see [`docs/TESTING.md`](docs/TESTING.md).
 
-```bash
-git clone https://github.com/DeAtHfIrE26/charter-21BCE0216.git
-cd charter-21BCE0216/usdc-transfer-tracker
-```
-2. **Install Dependencies**
+## Roadmap
 
-    ```bash
-    # Root dependencies
-    npm install
+Honest about what is not here:
 
-    # Navigate to each subproject and install dependencies
-    cd subgraph && npm install && cd ..
-    cd backend && npm install && cd ..
-    cd frontend && npm install && cd ..
-    ```
+- **Schnorr and RSA verification.** The contract's enum reserves them; both revert with `SchemeNotImplemented`. They are *not* implemented, and the contract does not pretend otherwise by returning `false`.
+- **On-chain verification against a deployed contract.** The code path exists behind an environment variable but has never been exercised — every Ethereum RPC was blocked from the environment this was built in.
+- **Live subgraph indexing and push notifications.** Cut deliberately; the Transfer Tracker explains why on the page.
 
-3. **Configure Environment Variables**
+## License
 
-    - **Subgraph Configuration**: Create a `.env` file in the `subgraph` directory.
-
-      ```env
-      GRAPH_ACCESS_TOKEN=your_graph_access_token
-      ```
-
-    - **Backend Configuration**: Create a `.env` file in the `backend` directory.
-
-      ```env
-      INFURA_PROJECT_ID=your_infura_project_id
-      PRIVATE_KEY=your_private_key
-      FIREBASE_SERVICE_ACCOUNT=./firebaseServiceAccount.json
-      TARGET_ADDRESS=0xYourTargetEthereumAddress
-      ```
-
-    - **Frontend Configuration**: Create a `.env` file in the `frontend` directory.
-
-      ```env
-      REACT_APP_BACKEND_URL=http://localhost:5000
-      ```
-
-4. **Deploy The Graph Subgraph**
-
-    ```bash
-    cd subgraph
-    graph auth --product hosted-service your_graph_access_token
-    graph deploy --product hosted-service your-username/usdc-transfer-tracker ./usdc-transfer-tracker
-    ```
-
-5. **Set Up Firebase Cloud Messaging**
-
-    - **Firebase Project**: Create a new project in [Firebase Console](https://console.firebase.google.com/).
-    - **Service Account Key**: Generate a private key and save it as `firebaseServiceAccount.json` in the `backend` directory.
-    - **Enable FCM**: Ensure Firebase Cloud Messaging is enabled.
-
-6. **Run the Backend Service**
-
-    ```bash
-    cd backend
-    npm start
-    ```
-
-7. **Run the Frontend Dashboard**
-
-    ```bash
-    cd frontend
-    npm start
-    ```
-
-    > Access the frontend at [http://localhost:3000](http://localhost:3000).
-
----
-
-## 📜 Usage
-
-### Interacting with the System
-
-- **Frontend Dashboard**: Access the real-time dashboard to monitor USDC transfers.
-- **API Endpoints**: Retrieve recent transfer data or trigger notifications through API calls.
-
-#### Example: Fetching Recent Transfers
-
-```javascript
-import axios from 'axios';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-
-export const fetchRecentTransfers = async () => {
-  try {
-    const response = await axios.get(`${BACKEND_URL}/api/transfers`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching transfers:', error);
-    throw error;
-  }
-};
-```
-## 🧪 Testing
-
-### 1. Run Unit Tests
-bash
-```
-
-# Navigate to backend directory
-cd backend
-npm test
-```
-Expected Output:
-```
-  USDCTransferTracker
-    ✓ Should fetch transfers successfully (X ms)
-    ✓ Should handle API errors gracefully (X ms)
-
-  2 passing (X seconds)
-
-```
-### 2. Add More Tests
-Extend the test suite to include scenarios like:
-
-Testing with different USDC contract addresses.
-Simulating high transfer volumes to test scalability.
-Verifying the correctness of push notifications.
-Handling edge cases like transfers with zero value or invalid addresses.
-
-## 📂 Project Structure
-
-### plaintext
-```
-usdc-transfer-tracker/
-├── README.md
-├── subgraph/
-│   ├── abis/
-│   │   └── USDC.json
-│   ├── src/
-│   │   └── mapping.ts
-│   ├── subgraph.yaml
-│   └── schema.graphql
-├── backend/
-│   ├── README.md
-│   ├── index.js
-│   ├── .env
-│   ├── firebaseServiceAccount.json
-│   ├── package.json
-│   └── .gitignore
-└── frontend/
-    ├── README.md
-    ├── src/
-    │   ├── App.js
-    │   ├── App.css
-    │   ├── Dashboard.js
-    │   ├── api.js
-    │   └── index.js
-    ├── public/
-    │   └── index.html
-    ├── package.json
-    └── .gitignore
-```
-
-## 🔗 Related Links
-The Graph Documentation
-Firebase Cloud Messaging Documentation
-React Documentation
-Hardhat Documentation
-Ethereum Documentation
-Infura
-MetaMask
-
-## 📝 Best Practices
-
-Security Audits: Always perform security audits on your backend services and smart contracts.
-Scalability Considerations: Design your backend to handle increasing transfer data volumes efficiently.
-Comprehensive Testing: Ensure all possible scenarios are tested to maintain system reliability.
-Clear Documentation: Maintain thorough documentation for ease of understanding and collaboration.
-Version Control: Use Git effectively to manage changes and collaborate with others.
-Environment Management: Use environment variables and .gitignore to protect sensitive information.
-
-
-<img width="2000rem" src="https://raw.githubusercontent.com/SamirPaulb/SamirPaulb/main/assets/rainbow-superthin.webp"><br>
-
-<!-- Futuristic Header -->
-<div align="center">
-  <img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0:3d85c6,100:00ffff&height=200&section=header&text=Task3%3A%20Signature%20Verifier&fontSize=60&fontColor=fff&animation=fadeIn&fontAlignY=38&desc=Universal+Signature+Verification+for+Blockchain&descAlignY=60&descAlign=50" />
-</div>
-
-<img width="2000rem" src="https://raw.githubusercontent.com/SamirPaulb/SamirPaulb/main/assets/rainbow-superthin.webp"><br>
-
-# 🛠️ Task 3: Modular Signature Scheme Verification
-
-## 📄 Overview
-
-The **Signature Verifier** project implements a modular algorithm designed to verify signatures generated by multiple signature schemes (e.g., **ECDSA**, **Schnorr**, **RSA**). This flexibility allows the verifier to adapt dynamically based on the provided signature scheme and ensure robust verification for a wide range of applications. By leveraging a smart contract, the solution performs on-chain verification to recover the signer address and validate the authenticity of transactions.
-
-## 🌟 Features
-
-- **Universal Compatibility**: Supports multiple signature schemes such as ECDSA, Schnorr, and RSA.
-- **Flexible Signature Format**: Accepts signature data in `bytes` format, enabling adaptability to various formats.
-- **Efficient Verification**: Optimized for gas efficiency with early exit conditions and conditional checks.
-- **Address Recovery**: Retrieves the signer's address to confirm the authenticity of signatures.
-- **Modular Design**: Allows for easy expansion to support additional signature schemes in the future.
-
-## 🔧 Setup Instructions
-
-### Prerequisites
-
-- **Node.js** (v14.x or later)
-- **npm** (v6.x or later)
-- **Hardhat**: Ethereum development environment
-- **Infura Account**: To access Ethereum nodes
-- **MetaMask**: For managing Ethereum accounts
-
-### Step-by-Step Setup
-
-1. **Clone the Repository**
-
-    ```bash
-    git clone https://github.com/DeAtHfIrE26/charter-21BCE0216.git
-    cd charter-21BCE0216/signature-verifier
-    ```
-
-2. **Install Dependencies**
-
-    ```bash
-    npm install
-    ```
-
-3. **Configure Environment Variables**
-
-    Create a `.env` file in the root directory with the following content:
-
-    ```env
-    INFURA_PROJECT_ID=your_infura_project_id
-    PRIVATE_KEY=your_private_key
-    ```
-
-    > **Note**: Replace `your_infura_project_id` with your actual Infura project ID and `your_private_key` with the private key of the Ethereum account you are using for deployment.
-
-4. **Compile the Smart Contract**
-
-    ```bash
-    npx hardhat compile
-    ```
-
-5. **Deploy the Smart Contract**
-
-    Ensure you have some Sepolia ETH in your account for deployment.
-
-    ```bash
-    npx hardhat run scripts/deploy.js --network sepolia
-    ```
-
-    > **Expected Output**:
-    > ```
-    > Deploying contracts with the account: 0xYourDeployerAddress
-    > SignatureVerifier deployed to: 0xDeployedContractAddress
-    > ```
-
----
-
-## 📜 Usage
-
-### Interacting with the Contract
-
-You can interact with the deployed `SignatureVerifier` contract by calling the `verifySignature` function directly or integrating it into other smart contracts or frontend applications.
-
-#### Example: Verifying a Signature
-
-```javascript
-const { ethers } = require("hardhat");
-
-async function verifySignature() {
-  const [deployer] = await ethers.getSigners();
-  const verifier = await ethers.getContractAt("SignatureVerifier", "0xDeployedContractAddress");
-
-  const signerAddress = "0xSignerAddress";
-  const signature = "0xSignatureBytes";
-  const messageHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("Message to be signed"));
-  const schemeType = 0; // 0 for ECDSA, 1 for Schnorr, 2 for RSA
-
-  const isValid = await verifier.verifySignature(signerAddress, signature, messageHash, schemeType);
-  console.log(`Is the signature valid? ${isValid}`);
-}
-
-verifySignature()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
-```
-
-## 🧪 Testing
-1. Run Unit Tests
-The project includes comprehensive tests to ensure the signature verification logic works as expected.
-
-bash
-```
-npx hardhat test
-```
-Expected Output:
-
-```
-  SignatureVerifier
-    ✓ Should verify a valid ECDSA signature (X ms)
-    ✓ Should fail verification with an invalid signature (X ms)
-    ✓ Should fail verification if the signer address does not match (X ms)
-    ✓ Should fail verification with an unsupported scheme type (X ms)
-
-  4 passing (X seconds)
-```
-2. Add More Tests
-Expand the test suite to include various edge cases and signature schemes:
-
-Edge Cases: Invalid signature lengths, malformed bytes inputs, etc.
-Unsupported Schemes: Ensure unsupported signature types are rejected.
-High-Volume Testing: Test with multiple signatures to simulate real-world usage.
-
-## 📂 Project Structure
-
-```
-signature-verifier/
-├── README.md
-├── contracts/
-│   └── SignatureVerifier.sol
-├── scripts/
-│   └── deploy.js
-├── test/
-│   └── SignatureVerifier.test.js
-├── hardhat.config.js
-├── package.json
-├── .env
-└── .gitignore
-```
-## 🔗 Related Links
-Ethereum Documentation
-Ethers.js Documentation
-Hardhat Documentation
-Infura
-MetaMask
-Elliptic Curve Digital Signature Algorithm (ECDSA)
-Schnorr Signature
-RSA Signature
-
-## 📝 Best Practices
-Security Audits: Regularly audit your smart contracts for vulnerabilities.
-Gas Optimization: Avoid unnecessary calculations to reduce gas costs during verification.
-Comprehensive Testing: Test across all supported signature schemes to maintain reliability.
-Modular Code Design: Keep functions modular to facilitate easier addition of new signature schemes.
-Documentation: Provide clear, thorough documentation for ease of understanding and collaboration.
-Environment Management: Use environment variables and .gitignore to protect sensitive information.
-
----
-
-<img width="2000rem" src="https://raw.githubusercontent.com/SamirPaulb/SamirPaulb/main/assets/rainbow-superthin.webp"><br>
+[MIT](LICENSE) © Kashyap Patel
 
 <div align="center">
-  <h2>🌟 Thank you for exploring this project! 🌟</h2>
-  <p>Feel free to check out the repository, use the code, and connect with me for any collaboration or queries.</p>
+<sub><a href="https://github.com/DeAtHfIrE26">GitHub</a> · <a href="https://www.linkedin.com/in/kashyap-patel2673/">LinkedIn</a></sub>
 </div>
-
-<div align="center">
-  <img src="https://github-readme-stats.vercel.app/api?username=DeAtHfIrE26&show_icons=true&theme=tokyonight" width="50%" />
-</div>
-
-<img width="2000rem" src="https://raw.githubusercontent.com/SamirPaulb/SamirPaulb/main/assets/rainbow-superthin.webp"><br>
-
-<div align="center">
-  <h3>Contact Me</h3>
-  <a href="https://www.linkedin.com/in/kashyap-patel2673/" target="_blank">
-    <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" />
-  </a>
-  <a href="mailto:kashyappatel2673@gmail.com">
-    <img src="https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="Email" />
-  </a>
-</div>
-
-<img width="2000rem" src="https://raw.githubusercontent.com/SamirPaulb/SamirPaulb/main/assets/rainbow-superthin.webp"><br>
-
-<div align="center">
-  <p>Developed with ❤️ by <strong>Kashyap Patel</strong></p>
-</div>
-
-
-
-
-
-

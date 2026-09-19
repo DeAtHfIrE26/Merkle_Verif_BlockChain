@@ -31,9 +31,13 @@ const MAX_VISUALISED_LEAVES = 128;
 /** Guard against someone pasting a novel into the textarea. */
 const MAX_LEAVES = 4096;
 
-const SAMPLE_INPUT = SAMPLE_TX_HASHES.map(
-  (hash, i) => `${hash}  # ${SAMPLE_TX_LABELS[i] ?? ''}`.trimEnd(),
-).join('\n');
+const SAMPLE_INPUT = SAMPLE_TX_HASHES.join('\n');
+
+/** The human label for a sample hash, when the value is one of them. */
+function sampleLabelFor(value: string): string | null {
+  const i = SAMPLE_TX_HASHES.indexOf(value.trim().toLowerCase() as Hex);
+  return i === -1 ? null : (SAMPLE_TX_LABELS[i] ?? null);
+}
 
 type BuildState =
   | { status: 'empty' }
@@ -143,7 +147,7 @@ export function MerkleExplorer() {
       />
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
-        <div className="min-w-0 space-y-5">
+        <div className="order-2 min-w-0 space-y-5 lg:order-none">
           <Panel
             title="Leaf values"
             description="One per line. Hex is hashed by its bytes; anything else as UTF-8."
@@ -208,6 +212,11 @@ export function MerkleExplorer() {
                   <dd className="break-all font-mono text-xs text-ink-300">
                     {values[safeIndex]}
                   </dd>
+                  {sampleLabelFor(values[safeIndex] ?? '') ? (
+                    <p className="mt-1 text-2xs text-ink-500">
+                      {sampleLabelFor(values[safeIndex] ?? '')}
+                    </p>
+                  ) : null}
                 </div>
                 <div>
                   <dt className="mb-1 text-2xs uppercase tracking-wider text-ink-500">
@@ -230,7 +239,7 @@ export function MerkleExplorer() {
           ) : null}
         </div>
 
-        <div className="min-w-0 space-y-5">
+        <div className="order-1 min-w-0 space-y-5 lg:order-none">
           {build.status === 'empty' ? (
             <EmptyState onLoadSample={() => setInput(SAMPLE_INPUT)} />
           ) : build.status === 'error' ? (
