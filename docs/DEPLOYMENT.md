@@ -1,14 +1,26 @@
 # Deployment
 
-**Current status: not deployed.** Everything is ready and verified locally and in CI; the remaining step needs an action only a repository admin can take. This document says exactly what and why.
+**Current status: live at [deathfire26.github.io/Merkle_Verif_BlockChain](https://deathfire26.github.io/Merkle_Verif_BlockChain/).**
 
-**Shortest path to a live site:** set **Settings → Pages → Source: "GitHub Actions"**, then re-run the *Deploy to GitHub Pages* workflow. That is the whole thing — no accounts, no credentials, no configuration.
+Served by GitHub Pages from the `gh-pages` branch ("Deploy from a branch" source, `/ (root)`).
+`.github/workflows/pages-branch.yml` rebuilds and republishes that branch on every push to `main`,
+so the site tracks the default branch with no further action.
+
+Verified against the deployed bundle rather than assumed:
+
+```bash
+BASE_URL=https://deathfire26.github.io/Merkle_Verif_BlockChain npm run test:e2e
+# 100 passed (1.3m)
+```
+
+Cost: zero, permanently. GitHub Pages is free for public repositories, the site is
+static, and nothing here can expire, sleep, or bill.
 
 ---
 
-## Why it is not already live
+## Why GitHub Pages and not Vercel
 
-Creating a Vercel project from this session was refused:
+Vercel was the original target. Creating a project from the build session was refused:
 
 ```
 Vercel API error 403
@@ -18,11 +30,11 @@ Vercel API error 403
 
 The connection can read your Vercel account fine — it lists the team (`deathfire26's projects`, Hobby) and all six existing projects, and confirms the Vercel GitHub integration is installed. It just cannot **create** a project, and the inline-deploy fallback is disabled server-side. Retried after two separate reconnects; identical result each time.
 
-This is an account permission, not a problem with the code. The production build succeeds, and the full end-to-end suite passes against it — see `docs/TESTING.md`.
+This is an account permission, not a problem with the code. Rather than block on it, the app ships on GitHub Pages, which costs nothing and needs no third-party account. The Vercel route below still works if you ever want it — nothing about the codebase is Pages-specific.
 
 ---
 
-## Option A — Vercel (recommended, ~2 minutes)
+## Option A — Vercel (alternative, ~2 minutes)
 
 The repository is already configured for it: `apps/web/vercel.json` pins the framework, build command and security headers, and `apps/web/package.json` has a `prebuild` step that builds the shared package first.
 
@@ -53,32 +65,42 @@ Hobby is non-commercial only. A personal portfolio piece is within that.
 
 > **Note on free-tier figures.** Vercel's own docs were unreachable from the sandbox this was built in (`vercel.com` is blocked by the egress proxy), so specific Hobby limits could not be verified against the primary source. The design sidesteps them by using none of the constrained resources, but do not quote numbers from this repo as authoritative.
 
-## Option B — GitHub Pages (one setting, then automatic)
+## Option B — GitHub Pages (what is live today)
 
-The app also builds to a fully static bundle, and `.github/workflows/pages.yml` publishes it.
+The app builds to a fully static bundle, so Pages can host it for free and forever. There are two routes to it, and **both are already wired up**. Pick either; only one Pages source can be active at a time, so they cannot fight over the live site.
 
-**Required once, by a repository admin:**
+### Why a setting is needed at all
 
-> **Settings → Pages → Build and deployment → Source: "GitHub Actions"**
-
-A workflow cannot do this for you. Creating a Pages site needs admin scope, which
-the automatic `GITHUB_TOKEN` does not have even when the workflow grants
-`pages: write`. An earlier version of this workflow used
-`actions/configure-pages` with `enablement: true` expecting it to self-enable; on
-its first run it failed with:
+Pages had to be switched on by hand once, because **a workflow cannot switch it on**. Creating a Pages site needs admin scope, which the automatic `GITHUB_TOKEN` does not have even when the workflow grants `pages: write`. An earlier version of `pages.yml` used `actions/configure-pages` with `enablement: true` expecting it to self-enable; every run failed at the same step:
 
 ```
 Get Pages site failed.    Error: Not Found
 Create Pages site failed. Error: Resource not accessible by integration
 ```
 
-After the source is set, every push to `main` publishes automatically, and the
-workflow can also be run by hand from **Actions → Deploy to GitHub Pages → Run
-workflow**.
+Driving the Pages REST API directly from the build sandbox was also refused — `403 Access to this GitHub API path is not permitted through this proxy` — so there is no way around the manual step from here. It is genuinely one click; it just has to be *your* click.
 
-- The resulting URL is `https://deathfire26.github.io/Merkle_Verif_BlockChain/`.
-- `PAGES_BASE_PATH` handles the `/Merkle_Verif_BlockChain` subpath automatically.
-- GitHub's `github-pages` environment restricts deployments to the default branch, so this publishes from `main`.
+### Route 1 — branch source (**this is the one in use**)
+
+`.github/workflows/pages-branch.yml` builds the static export and commits it to the **`gh-pages`** branch using the ordinary `contents: write` token. No Pages API is involved, so nothing can fail the way `pages.yml` does.
+
+Settings, for the record: **Source** "Deploy from a branch", **Branch** `gh-pages`, folder `/ (root)`.
+
+The workflow re-publishes the branch on every push to `main`, so the site stays current without further attention. `.nojekyll` is written into the branch because Pages runs Jekyll on branch sources and Jekyll silently drops `_next/`.
+
+### Route 2 — GitHub Actions source
+
+`.github/workflows/pages.yml` uploads a Pages artifact and deploys it directly, which skips the `gh-pages` branch entirely and is the more modern route.
+
+> **Settings → Pages → Build and deployment → Source: "GitHub Actions"**
+
+Then re-run **Actions → Deploy to GitHub Pages → Run workflow**. After that, every push to `main` publishes automatically.
+
+### Either way
+
+- The URL is `https://deathfire26.github.io/Merkle_Verif_BlockChain/`.
+- `PAGES_BASE_PATH` handles the `/Merkle_Verif_BlockChain` subpath automatically; the committed `gh-pages` build already has it baked in.
+- GitHub's `github-pages` environment restricts deployments to the default branch, so Route 2 publishes from `main`.
 
 Verified locally: `STATIC_EXPORT=true npm run build` produces `out/`, and the full Playwright suite passes 100/100 against that bundle served as plain files.
 
@@ -120,7 +142,7 @@ The script prints the two addresses and the exact variables to set. Adding `NEXT
 
 ## Redeploying
 
-Push to `main`. Vercel rebuilds on every push once linked; the Pages workflow runs on the same trigger. Pull requests get Vercel preview deployments automatically.
+Push to `main`. Vercel rebuilds on every push once linked; both Pages workflows run on the same trigger. Pull requests get Vercel preview deployments automatically.
 
 To roll back on Vercel: **Deployments → the last good one → Promote to Production**.
 
@@ -133,3 +155,5 @@ To roll back on Vercel: **Deployments → the last good one → Promote to Produ
 | `npm run build` | Builds `packages/core`, then the Next.js app. |
 | `npm run test:e2e` | Playwright against a local production server. |
 | `BASE_URL=https://… npm run test:e2e` | **Runs the same suite against a deployed URL.** Use this after the first deploy. |
+
+Subpath deployments work: `BASE_URL=https://deathfire26.github.io/Merkle_Verif_BlockChain npm run test:e2e` runs all 100 checks against the project site. A trailing slash is optional — the config adds one, because `new URL('/merkle', 'https://host/Repo')` resolves to `https://host/merkle` and would otherwise test the wrong origin silently.

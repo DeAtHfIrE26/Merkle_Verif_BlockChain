@@ -30,14 +30,24 @@ Three tools, no credentials of any kind:
 
 ## Live demo
 
-**Not yet deployed** — one repository setting away.
+**[deathfire26.github.io/Merkle_Verif_BlockChain](https://deathfire26.github.io/Merkle_Verif_BlockChain/)**
 
-Set **Settings → Pages → Build and deployment → Source: "GitHub Actions"**, then re-run the *Deploy to GitHub Pages* workflow, and the site publishes to
-`https://deathfire26.github.io/Merkle_Verif_BlockChain/`. A workflow cannot switch Pages on by itself: creating a Pages site needs admin scope that the automatic `GITHUB_TOKEN` does not carry.
+No wallet, no sign-up, nothing to install. Every page does something on arrival:
+the Explorer lands with a built tree and a verified proof, and the Signature
+Verifier lands with a signed message already recovered both ways so the
+EIP-191-vs-raw difference is visible without clicking anything.
 
-The Vercel route is also ready (import the repo, root directory `apps/web`, no environment variables) — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Everything is built and CI-verified; only the hosting switch remains.
+Served by GitHub Pages from the [`gh-pages`](../../tree/gh-pages) branch, which
+`.github/workflows/pages-branch.yml` regenerates on every push to `main`. Free,
+with nothing that can expire or sleep. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
+for the alternative routes (the "GitHub Actions" Pages source, and Vercel).
 
-Run it locally in under a minute — see [Getting started](#getting-started).
+Verified against that live bundle, not just locally:
+
+```bash
+BASE_URL=https://deathfire26.github.io/Merkle_Verif_BlockChain npm run test:e2e
+# 100 passed (1.3m)
+```
 
 ## Why this is interesting
 

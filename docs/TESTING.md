@@ -93,3 +93,31 @@ Stated plainly rather than left for you to discover.
 `npm audit --omit=dev` reports **zero vulnerabilities** — nothing vulnerable ships to the browser.
 
 `npm audit` including dev dependencies reports 20, **all inside Hardhat 2's transitive tree** (`adm-zip`, `undici`, `tmp`, `serialize-javascript`, `ws`, and Hardhat's own `@metamask/eth-sig-util` chain). They are build-time only and never reach the deployed site. Clearing them means migrating to Hardhat 3, which is a different config format and test runner — deliberately out of scope here. This was 37 before the toolchain was updated.
+
+## Verifying a deployment
+
+The E2E suite is the deployment check, not a separate script:
+
+```bash
+BASE_URL=https://deathfire26.github.io/Merkle_Verif_BlockChain npm run test:e2e
+```
+
+When `BASE_URL` is set, Playwright starts no local server and drives the real
+site. All 100 checks apply unchanged — they assert on roles and text, never on
+host or port.
+
+**A bug this caught.** The suite navigated with absolute paths (`page.goto('/merkle')`).
+Playwright resolves those with `new URL(path, baseURL)`, and a leading slash
+replaces the *entire* path — so against `https://host/Merkle_Verif_BlockChain`
+every test silently loaded `https://host/merkle`, which does not exist. Run
+against the live project site, 96 of 100 checks failed on missing pages while
+the site itself was perfectly healthy.
+
+The fix is in two places: `playwright.config.ts` normalises `BASE_URL` to end in
+a slash, and `e2e/fixtures.ts` exposes `appPath()`, which strips the leading
+slash so paths resolve *under* the base path. Result against the deployed
+bundle: **100 passed (1.3m)**.
+
+This is worth stating plainly because it is the failure mode the whole suite
+exists to prevent — a verification step that reports green, or red, for reasons
+that have nothing to do with the thing being verified.
