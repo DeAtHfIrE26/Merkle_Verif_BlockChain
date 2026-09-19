@@ -1,4 +1,4 @@
-import { test, expect, expectNoConsoleErrors, gotoAndSettle } from './fixtures';
+import { test, expect, expectNoConsoleErrors, gotoAndSettle, appPath } from './fixtures';
 
 const ROUTES = [
   { path: '/', heading: /Prove a thing belongs/i, title: /Merkle Verify/ },
@@ -23,7 +23,7 @@ test.describe('routes', () => {
 });
 
 test('unknown paths render the 404 page, not a crash', async ({ page, consoleErrors }) => {
-  const response = await page.goto('/this-route-does-not-exist');
+  const response = await page.goto(appPath('/this-route-does-not-exist'));
   expect(response?.status()).toBe(404);
 
   // Hosts that serve a custom 404 document (Next, GitHub Pages) show our page.

@@ -7,7 +7,7 @@
 A browser-native toolkit for Merkle inclusion proofs and ECDSA signer recovery, cross-checked against the same verification logic written in Solidity.
 
 [![CI](https://github.com/DeAtHfIrE26/Merkle_Verif_BlockChain/actions/workflows/ci.yml/badge.svg)](https://github.com/DeAtHfIrE26/Merkle_Verif_BlockChain/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-226%20passing-2DD4A7)](docs/TESTING.md)
+[![Tests](https://img.shields.io/badge/tests-278%20passing-2DD4A7)](docs/TESTING.md)
 [![License](https://img.shields.io/badge/license-MIT-7C6BF5)](LICENSE)
 
 </div>
@@ -22,17 +22,56 @@ Three tools, no credentials of any kind:
 
 | Tool | What you can do |
 |---|---|
-| **Merkle Proof Explorer** | Build a tree from any values, click any leaf to get its inclusion proof, then tamper with the proof and watch verification fail — with the computed root shown next to the expected one. |
+| **Merkle Proof Explorer** | Build a tree from any values, click any leaf to get its inclusion proof, then tamper with the proof and watch verification fail — with the computed root shown next to the expected one. Three leaf encodings, including one that reproduces OpenZeppelin's `StandardMerkleTree` exactly, so a proof generated here is one a real contract accepts. Trees are shareable by link, and proofs copy out as a JSON array. |
 | **Signature Verifier** | Sign a message with a throwaway key generated in your browser, then recover the signer. Shows **EIP-191 and raw** recovery side by side. |
 | **Transfer Tracker** | A token transfer feed rendered from simulated data, next to the subgraph query a live deployment would run. Labelled as simulated on every surface. |
 
 > **No wallet. No sign-up. No API keys. Nothing to install.** Every computation runs locally in your browser. There is no demo account because there is no account.
 
+## Generating a proof your contract will accept
+
+A Merkle root means nothing without the rule that produced its leaves, and
+mismatched leaf encoding is the usual reason a hand-built proof is rejected
+on-chain. The Explorer makes the rule explicit:
+
+| Encoding | Leaf | Used by |
+|---|---|---|
+| Raw value | `keccak256(bytes)` | anything hashing a value directly |
+| Packed (address, uint256) | `keccak256(abi.encodePacked(address, uint256))` | hand-rolled airdrops |
+| OpenZeppelin standard | `keccak256(keccak256(abi.encode(address, uint256)))` | `StandardMerkleTree` |
+
+The last one reproduces OpenZeppelin's tree exactly — double-hashed leaves, the
+same complete-binary-tree layout, and leaves ordered by hash rather than by
+input line. That is asserted rather than claimed: `packages/core/src/leaves.test.ts`
+builds both trees over the same rows and checks the roots match, every proof
+matches element for element, and **OpenZeppelin's own verifier accepts the
+proofs this project generates**, across twelve leaf counts including the odd
+ones where naive implementations diverge.
+
+Paste an allowlist, pick your row, and **Copy proof** gives you a JSON array
+ready for a Foundry or Hardhat test. **Share this tree** puts the whole thing in
+a link.
+
 ## Live demo
 
-**Not yet deployed.** Creating a Vercel project was refused for this repository's automation credentials (`403 forbidden — You don't have permission to create the project`), so the final deploy step needs a human. The repository is configured and the production build is verified; [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) has the two-minute import, and a GitHub Pages workflow is wired as a zero-setup alternative.
+**[deathfire26.github.io/Merkle_Verif_BlockChain](https://deathfire26.github.io/Merkle_Verif_BlockChain/)**
 
-Run it locally in under a minute — see [Getting started](#getting-started).
+No wallet, no sign-up, nothing to install. Every page does something on arrival:
+the Explorer lands with a built tree and a verified proof, and the Signature
+Verifier lands with a signed message already recovered both ways so the
+EIP-191-vs-raw difference is visible without clicking anything.
+
+Served by GitHub Pages from the [`gh-pages`](../../tree/gh-pages) branch, which
+`.github/workflows/pages-branch.yml` regenerates on every push to `main`. Free,
+with nothing that can expire or sleep. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
+for the alternative routes (the "GitHub Actions" Pages source, and Vercel).
+
+Verified against that live bundle, not just locally:
+
+```bash
+BASE_URL=https://deathfire26.github.io/Merkle_Verif_BlockChain npm run test:e2e
+# 100 passed (1.3m)
+```
 
 ## Why this is interesting
 
@@ -109,7 +148,7 @@ The app requires **none**. [`.env.example`](.env.example) documents the optional
 
 ## Testing
 
-**226 tests, all passing:** 85 unit, 41 contract, 100 end-to-end. Every E2E test also fails on any console error, failed request or HTTP ≥ 400.
+**278 tests, all passing:** 119 unit, 41 contract, 118 end-to-end. Every E2E test also fails on any console error, failed request or HTTP ≥ 400.
 
 Full breakdown, including **what is deliberately not tested and why**, in [`docs/TESTING.md`](docs/TESTING.md).
 

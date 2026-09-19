@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { MerkleTree } from '@merkle-verify/core';
+import type { Hex, MerkleTree } from '@merkle-verify/core';
 import { cn } from '@/lib/cn';
 
 export interface TreeHighlight {
@@ -48,20 +48,47 @@ export function MerkleTreeView({
   className,
   compact = false,
 }: Props) {
-  const { nodes, edges, width, height, radius } = useMemo(() => {
+  const { nodes, edges, width, height, radius, leafAt } = useMemo(() => {
     const layerCount = tree.layers.length;
-    const leafCount = tree.layers[0]!.length;
+    const leafCount = tree.leaves.length;
+    // Under the OpenZeppelin scheme leaves sit on two different layers, so the
+    // widest layer -- not layer 0 -- decides how much room the drawing needs.
+    const widest = tree.layers.reduce((max, layer) => Math.max(max, layer.length), 1);
 
-    const r = compact ? 7 : Math.max(5, Math.min(11, 220 / leafCount));
+    /**
+     * How many slots a layer's nodes are spread across.
+     *
+     * The layered scheme fills every layer left to right, so spreading nodes
+     * evenly across the layer is right. A complete binary tree does not: its
+     * deepest layer may hold two nodes that both belong under the leftmost
+     * parent. Spreading those evenly would fling them to the far corners and
+     * draw edges across the whole picture, so each layer is instead laid out on
+     * the 2^depth grid the tree actually has.
+     */
+    const slotsFor = (layer: readonly Hex[], l: number) =>
+      tree.scheme === 'standard' ? 2 ** (layerCount - 1 - l) : layer.length;
+
+    const maxSlots = tree.layers.reduce(
+      (max, layer, l) => Math.max(max, slotsFor(layer, l)),
+      1,
+    );
+
+    const r = compact ? 7 : Math.max(5, Math.min(11, 220 / Math.max(widest, maxSlots)));
     const hGap = compact ? 52 : 62;
-    const w = Math.max(320, leafCount * (compact ? 44 : 56));
+    const w = Math.max(320, maxSlots * (compact ? 44 : 56));
     const h = (layerCount - 1) * hGap + r * 2 + (compact ? 16 : 28);
 
-    // Ancestors of the proved leaf, layer by layer.
-    const pathIdx: number[] = [];
+    // Which drawn node is which leaf, keyed "layer:index".
+    const leafAtKey = new Map<string, number>();
+    tree.leafPositions.forEach((pos, i) => leafAtKey.set(`${pos.layer}:${pos.index}`, i));
+
+    // Ancestors of the proved leaf, from its own layer upward. Layers below it
+    // stay undefined, which matters when leaves are not all on layer 0.
+    const pathIdx: Array<number | undefined> = [];
+    const startLayer = leafIndex === null ? 0 : (tree.leafPositions[leafIndex]?.layer ?? 0);
     if (leafIndex !== null) {
-      let idx = leafIndex;
-      for (let l = 0; l < layerCount; l += 1) {
+      let idx = tree.leafPositions[leafIndex]?.index ?? leafIndex;
+      for (let l = startLayer; l < layerCount; l += 1) {
         pathIdx[l] = idx;
         idx = Math.floor(idx / 2);
       }
@@ -70,8 +97,9 @@ export function MerkleTreeView({
     // Siblings contributed to the proof (a promoted odd node has none).
     const proofIdx: Array<number | undefined> = [];
     if (leafIndex !== null) {
-      for (let l = 0; l < layerCount - 1; l += 1) {
-        const own = pathIdx[l]!;
+      for (let l = startLayer; l < layerCount - 1; l += 1) {
+        const own = pathIdx[l];
+        if (own === undefined) continue;
         const sibling = own % 2 === 0 ? own + 1 : own - 1;
         proofIdx[l] = tree.layers[l]![sibling] !== undefined ? sibling : undefined;
       }
@@ -81,7 +109,7 @@ export function MerkleTreeView({
     tree.layers.forEach((layer, l) => {
       const y = h - r - (compact ? 8 : 14) - l * hGap;
       layer.forEach((hash, i) => {
-        const x = ((i + 0.5) * w) / layer.length;
+        const x = ((i + 0.5) * w) / slotsFor(layer, l);
         let role: Node['role'] = 'plain';
         if (l === layerCount - 1) role = 'root';
         if (leafIndex !== null) {
@@ -109,7 +137,15 @@ export function MerkleTreeView({
       });
     });
 
-    return { nodes: placed, edges: lines, width: w, height: h, radius: r };
+    return {
+      nodes: placed,
+      edges: lines,
+      width: w,
+      height: h,
+      radius: r,
+      leafAt: leafAtKey,
+      leafCount,
+    };
   }, [tree, leafIndex, compact]);
 
   const pathColor = broken ? '#F4527A' : '#7C6BF5';
@@ -122,15 +158,15 @@ export function MerkleTreeView({
         style={
           // Wide trees scroll inside this box rather than stretching the page;
           // small ones just scale down with the viewBox.
-          !compact && tree.layers[0]!.length > 16
-            ? { minWidth: `${Math.min(tree.layers[0]!.length * 28, 1200)}px` }
+          !compact && tree.leaves.length > 16
+            ? { minWidth: `${Math.min(tree.leaves.length * 28, 1200)}px` }
             : undefined
         }
         role="img"
         aria-label={
           leafIndex === null
-            ? `Merkle tree with ${tree.layers[0]!.length} leaves`
-            : `Merkle tree with ${tree.layers[0]!.length} leaves, showing the proof path for leaf ${leafIndex}`
+            ? `Merkle tree with ${tree.leaves.length} leaves`
+            : `Merkle tree with ${tree.leaves.length} leaves, showing the proof path for leaf ${leafIndex}`
         }
       >
         <g>
@@ -155,8 +191,8 @@ export function MerkleTreeView({
                 : n.role === 'path' || n.role === 'root'
                   ? pathColor
                   : '#262B35';
-            const isLeaf = n.layer === 0;
-            const selectable = isLeaf && onSelectLeaf;
+            const ownLeaf = leafAt.get(`${n.layer}:${n.index}`);
+            const selectable = ownLeaf !== undefined && onSelectLeaf;
 
             const circle = (
               <>
@@ -189,18 +225,18 @@ export function MerkleTreeView({
                 key={`${n.layer}-${n.index}`}
                 role="button"
                 tabIndex={0}
-                aria-label={`Select leaf ${n.index}`}
-                aria-pressed={leafIndex === n.index}
-                onClick={() => onSelectLeaf(n.index)}
+                aria-label={`Select leaf ${ownLeaf}`}
+                aria-pressed={leafIndex === ownLeaf}
+                onClick={() => onSelectLeaf(ownLeaf!)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    onSelectLeaf(n.index);
+                    onSelectLeaf(ownLeaf!);
                   }
                 }}
                 className="cursor-pointer focus:outline-none [&:focus-visible>circle:last-of-type]:stroke-brand-bright [&:focus-visible>circle:last-of-type]:stroke-[3]"
               >
-                <title>{`Leaf ${n.index}: ${n.hash}`}</title>
+                <title>{`Leaf ${ownLeaf}: ${n.hash}`}</title>
                 <circle cx={n.x} cy={n.y} r={radius + 8} fill="transparent" />
                 {circle}
               </g>

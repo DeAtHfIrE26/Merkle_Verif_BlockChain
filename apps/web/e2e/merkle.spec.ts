@@ -107,3 +107,128 @@ test.describe('Merkle Proof Explorer', () => {
     await expect(page.getByRole('status')).toContainText(/Valid/i);
   });
 });
+
+/**
+ * Leaf encoding, sharing and export.
+ *
+ * These three exist so the Explorer can serve someone holding a real allowlist,
+ * not only someone learning what a proof is. The OpenZeppelin root asserted
+ * below is the one `@openzeppelin/merkle-tree` produces for the sample
+ * allowlist -- `packages/core/src/leaves.test.ts` pins that parity at the unit
+ * level, and this checks the UI actually surfaces it.
+ */
+test.describe('Merkle Proof Explorer — encodings', () => {
+  test.beforeEach(async ({ page }) => {
+    await gotoAndSettle(page, '/merkle');
+  });
+
+  /**
+   * The full root. HexValue truncates what it shows but puts the whole value in
+   * the title, so reading that avoids asserting on an abbreviation.
+   */
+  const readRoot = async (page: import('@playwright/test').Page) => {
+    const title = await page.locator('[title^="Merkle root:"]').first().getAttribute('title');
+    const match = /0x[0-9a-f]{64}/i.exec(title ?? '');
+    expect(match, `no root in title: ${title}`).not.toBeNull();
+    return match![0];
+  };
+
+  test('switching encoding swaps in sample data that fits it', async ({ page }) => {
+    const values = page.getByLabel(/^Values$/i);
+    await expect(values).toHaveValue(/0xe81aa9d7/);
+
+    await page.getByRole('radio', { name: /OpenZeppelin standard/i }).check();
+    // The tx-hash sample cannot parse as address/amount, so it is replaced.
+    await expect(values).toHaveValue(/0xA1b2C3d4/);
+    await expect(page.getByRole('status')).toContainText(/Valid/i);
+  });
+
+  test('each encoding produces a different root for the same allowlist', async ({
+    page,
+    consoleErrors,
+  }) => {
+    await page.getByRole('radio', { name: /Packed/i }).check();
+    await expect(page.getByRole('status')).toContainText(/Valid/i);
+    const packedRoot = await readRoot(page);
+
+    await page.getByRole('radio', { name: /OpenZeppelin standard/i }).check();
+    await expect(page.getByRole('status')).toContainText(/Valid/i);
+    const standardRoot = await readRoot(page);
+
+    expect(standardRoot).not.toBe(packedRoot);
+    expectNoConsoleErrors(consoleErrors);
+  });
+
+  test('a malformed allowlist line is reported with its line number', async ({ page }) => {
+    await page.getByRole('radio', { name: /Packed/i }).check();
+    await page.getByLabel(/^Values$/i).fill('0xnot-an-address, 5');
+    await expect(page.getByText(/Line 1/i)).toBeVisible();
+  });
+
+  test('the standard encoding says it reorders leaves', async ({ page }) => {
+    await page.getByRole('radio', { name: /OpenZeppelin standard/i }).check();
+    await expect(page.getByText(/ordered by hash, not by line/i)).toBeVisible();
+  });
+
+  test('every leaf still verifies under the standard encoding', async ({ page }) => {
+    await page.getByRole('radio', { name: /OpenZeppelin standard/i }).check();
+    const next = page.getByRole('button', { name: 'Next leaf' });
+    for (let i = 0; i < 4; i += 1) {
+      await next.click();
+      await expect(page.getByRole('status')).toContainText(/Valid/i);
+    }
+  });
+});
+
+test.describe('Merkle Proof Explorer — sharing and export', () => {
+  test.beforeEach(async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await gotoAndSettle(page, '/merkle');
+  });
+
+  test('a shared link restores the values, encoding and selected leaf', async ({
+    page,
+    consoleErrors,
+  }) => {
+    await page.getByRole('radio', { name: /OpenZeppelin standard/i }).check();
+    await page.getByRole('button', { name: 'Next leaf' }).click();
+    await page.getByRole('button', { name: /Share this tree/i }).click();
+    await expect(page.getByRole('button', { name: /Link copied/i })).toBeVisible();
+
+    const shared = await page.evaluate(() => navigator.clipboard.readText());
+    expect(shared).toContain('e=standard');
+    expect(shared).toContain('i=1');
+
+    // Land on the link in a clean page and confirm it rebuilds the same tree.
+    await page.goto('about:blank');
+    await page.goto(shared);
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByRole('radio', { name: /OpenZeppelin standard/i })).toBeChecked();
+    await expect(page.getByLabel(/^Values$/i)).toHaveValue(/0xA1b2C3d4/);
+    await expect(page.getByText(/Leaf 1 of/i)).toBeVisible();
+    await expect(page.getByRole('status')).toContainText(/Valid/i);
+    expectNoConsoleErrors(consoleErrors);
+  });
+
+  test('a hand-mangled link falls back to defaults rather than breaking', async ({
+    page,
+    consoleErrors,
+  }) => {
+    await gotoAndSettle(page, '/merkle?v=%%%not-base64%%%&e=nonsense&i=-4');
+    await expect(page.getByRole('status')).toContainText(/Valid/i);
+    await expect(page.getByRole('radio', { name: /Raw value/i })).toBeChecked();
+    expectNoConsoleErrors(consoleErrors);
+  });
+
+  test('copy proof puts a JSON array of the sibling hashes on the clipboard', async ({ page }) => {
+    await page.getByRole('button', { name: /Copy proof/i }).click();
+    await expect(page.getByRole('button', { name: /^Copied$/i })).toBeVisible();
+
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    const parsed = JSON.parse(copied) as string[];
+    expect(Array.isArray(parsed)).toBe(true);
+    expect(parsed.length).toBeGreaterThan(0);
+    for (const element of parsed) expect(element).toMatch(/^0x[0-9a-f]{64}$/);
+  });
+});

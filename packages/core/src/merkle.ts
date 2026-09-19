@@ -38,11 +38,39 @@ function canon(value: string): Hex | null {
   return normalized !== null && isHash32(normalized) ? normalized : null;
 }
 
+/** Where a leaf sits in `layers`. */
+export interface LeafPosition {
+  readonly layer: number;
+  readonly index: number;
+}
+
+/**
+ * How a tree was assembled. The two schemes produce different roots for any
+ * leaf count that is not a power of two, so a root is only meaningful next to
+ * the scheme that built it.
+ *
+ *   layered   this project and `MerkleVerifier.sol`: pair up each layer, and
+ *             promote an unpaired node unchanged. Every leaf sits on layer 0.
+ *   standard  OpenZeppelin `StandardMerkleTree`: a complete binary tree in a
+ *             flat array, leaves filling the last n slots in descending hash
+ *             order. Leaves can therefore sit on two different layers.
+ */
+export type TreeScheme = 'layered' | 'standard';
+
 export interface MerkleTree {
-  /** Layer 0 is the leaves; the final layer holds the single root. */
+  /**
+   * Bottom-up: the deepest layer first, the single root last. A node at
+   * `layers[l][i]` has its parent at `layers[l + 1][Math.floor(i / 2)]` under
+   * both schemes, which is what lets one renderer and one proof walk serve
+   * either.
+   */
   readonly layers: readonly (readonly Hex[])[];
   readonly root: Hex;
+  /** Leaves in tree order, which is not input order under `standard`. */
   readonly leaves: readonly Hex[];
+  /** `leafPositions[i]` locates `leaves[i]` in `layers`. */
+  readonly leafPositions: readonly LeafPosition[];
+  readonly scheme: TreeScheme;
 }
 
 export class MerkleError extends Error {
@@ -105,7 +133,14 @@ export function buildMerkleTree(leaves: readonly Hex[]): MerkleTree {
     current = next;
   }
 
-  return { layers, root: current[0]!, leaves: normalized };
+  return {
+    layers,
+    root: current[0]!,
+    leaves: normalized,
+    // Every leaf is on layer 0 under this scheme.
+    leafPositions: normalized.map((_, index) => ({ layer: 0, index })),
+    scheme: 'layered',
+  };
 }
 
 /** Convenience: hash raw values into leaves, then build. */
@@ -125,9 +160,12 @@ export function getProof(tree: MerkleTree, index: number): Hex[] {
     );
   }
 
+  // Start at the leaf's own layer. Under `layered` that is always 0; under
+  // `standard` a leaf may sit one layer above the deepest.
+  const start = tree.leafPositions[index]!;
   const proof: Hex[] = [];
-  let idx = index;
-  for (let level = 0; level < tree.layers.length - 1; level += 1) {
+  let idx = start.index;
+  for (let level = start.layer; level < tree.layers.length - 1; level += 1) {
     const layer = tree.layers[level]!;
     const siblingIdx = idx % 2 === 0 ? idx + 1 : idx - 1;
     const sibling = layer[siblingIdx];
@@ -183,4 +221,65 @@ export function isInternalNode(tree: MerkleTree, value: Hex): boolean {
 /** Total node count across every layer — used by the visualisation. */
 export function nodeCount(tree: MerkleTree): number {
   return tree.layers.reduce((sum, layer) => sum + layer.length, 0);
+}
+
+/**
+ * Build a tree the way OpenZeppelin's `StandardMerkleTree` does.
+ *
+ * The layout is a complete binary tree in a flat array of `2n - 1` entries:
+ * leaves occupy the last `n` slots in descending hash order, and the node at
+ * array index `i` is `hashPair(a[2i + 1], a[2i + 2])`. That differs from
+ * `buildMerkleTree`, which pairs whole layers and promotes an unpaired node --
+ * the two agree only when the leaf count is a power of two.
+ *
+ * `leaves.test.ts` asserts root-and-proof equality against the real
+ * `@openzeppelin/merkle-tree` package, and that OpenZeppelin's own verifier
+ * accepts the proofs produced here.
+ *
+ * @param leaves already-hashed 32-byte leaves, in any order; this sorts them.
+ * @throws MerkleError if the set is empty or any leaf is not 32-byte hex.
+ */
+export function buildStandardMerkleTree(leaves: readonly Hex[]): MerkleTree {
+  if (leaves.length === 0) {
+    throw new MerkleError('Cannot build a Merkle tree with no leaves.');
+  }
+  const normalized = leaves.map((leaf, i) => {
+    const value = canon(leaf);
+    if (value === null) {
+      throw new MerkleError(`Leaf at index ${i} is not a 32-byte hex value.`);
+    }
+    return value;
+  });
+
+  const n = normalized.length;
+  // Descending: hashes are fixed-width lowercase hex, so string order is byte order.
+  const sorted = [...normalized].sort((a, b) => (a < b ? 1 : a > b ? -1 : 0));
+
+  const nodes: (Hex | undefined)[] = new Array(2 * n - 1).fill(undefined);
+  for (let i = 0; i < n; i += 1) nodes[n - 1 + i] = sorted[i]!;
+  for (let i = n - 2; i >= 0; i -= 1) {
+    nodes[i] = hashPair(nodes[2 * i + 1]!, nodes[2 * i + 2]!);
+  }
+
+  // Slice the array into depth levels, then reverse so the deepest comes first
+  // and `layers[l][i]`'s parent stays at `layers[l + 1][floor(i / 2)]`.
+  const levels: Hex[][] = [];
+  for (let start = 0; start < nodes.length; start = 2 * start + 1) {
+    const end = Math.min(2 * start + 1, nodes.length);
+    levels.push(nodes.slice(start, end) as Hex[]);
+  }
+  const layers = levels.reverse();
+
+  // A leaf's array index maps to (depth, offset within that depth).
+  const depthOf = (arrayIndex: number) => Math.floor(Math.log2(arrayIndex + 1));
+  const leafPositions = sorted.map((_, i) => {
+    const arrayIndex = n - 1 + i;
+    const depth = depthOf(arrayIndex);
+    return {
+      layer: layers.length - 1 - depth,
+      index: arrayIndex - (2 ** depth - 1),
+    };
+  });
+
+  return { layers, root: nodes[0]!, leaves: sorted, leafPositions, scheme: 'standard' };
 }

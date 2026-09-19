@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   addressForPrivateKey,
   createBurnerKey,
@@ -55,6 +55,11 @@ function SignatureWorkbench({ onRegenerate }: { onRegenerate: () => void }) {
   const [comparison, setComparison] = useState<ModeOutcome[] | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Set as soon as the visitor drives anything themselves. The mount demo below
+  // resolves asynchronously, and without this it could land after a click and
+  // overwrite a signature the visitor just asked for.
+  const userActed = useRef(false);
+
   const address = addressForPrivateKey(privateKey);
   const digest = hashMessageContent(message);
 
@@ -62,7 +67,47 @@ function SignatureWorkbench({ onRegenerate }: { onRegenerate: () => void }) {
   // lives in a lazy initialiser rather than being reassignable state.
   const regenerate = onRegenerate;
 
+  // Sign and verify the default message once on mount, so the page arrives
+  // demonstrating itself rather than as an empty form behind a disabled button.
+  // The EIP-191 vs raw comparison is the whole point of this page and it should
+  // not take two clicks to reach. Everything here is local computation -- no
+  // network, no key material leaves the tab -- and the buttons still drive every
+  // change afterwards.
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      const sig = await signDigest(privateKey, digest, 'eip191');
+      if (cancelled || userActed.current) return;
+
+      const outcome = await verifySignature(address, digest, sig, 'eip191');
+      const outcomes = await Promise.all(
+        (['eip191', 'raw'] as SignatureMode[]).map(async (mode) => {
+          const recovered = await recoverSigner(digest, sig, mode);
+          return {
+            mode,
+            recovered,
+            matches: recovered !== null && recovered.toLowerCase() === address.toLowerCase(),
+          };
+        }),
+      );
+      if (cancelled || userActed.current) return;
+
+      setSignature(sig);
+      setResult(outcome);
+      setComparison(outcomes);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // Mount only. `digest` and `address` are derived from the initial message and
+    // burner key; every later change goes through Sign / Verify explicitly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const sign = useCallback(async () => {
+    userActed.current = true;
     setBusy(true);
     try {
       const sig = await signDigest(privateKey, digest, signingMode);
@@ -76,6 +121,7 @@ function SignatureWorkbench({ onRegenerate }: { onRegenerate: () => void }) {
 
   const verify = useCallback(async () => {
     if (!signature) return;
+    userActed.current = true;
     setBusy(true);
     try {
       const outcome = await verifySignature(expectedSigner, digest, signature, checkMode);
@@ -249,7 +295,11 @@ function SignatureWorkbench({ onRegenerate }: { onRegenerate: () => void }) {
                 <dl className="space-y-1.5 text-2xs">
                   <div className="flex flex-wrap items-baseline gap-2">
                     <dt className="w-24 shrink-0 text-ink-500">Recovered</dt>
-                    <dd className="font-mono text-ink-300">{result.recovered}</dd>
+                    {/* A 42-character address is one unbreakable run. As a flex
+                        item it defaults to min-width:auto, so without min-w-0 and
+                        break-all it sets the row's floor and pushes a 360px
+                        viewport into horizontal scroll. */}
+                    <dd className="min-w-0 break-all font-mono text-ink-300">{result.recovered}</dd>
                   </div>
                 </dl>
               ) : null}
@@ -379,8 +429,12 @@ function ModeComparison({
                 : 'border-ink-700 bg-ink-900',
             )}
           >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="flex items-center gap-2">
+            {/* Both flex levels need min-w-0 and wrapping: the label plus its
+                "signed this way" badge is wider than a 360px card can hold, and
+                a flex item defaults to min-width:auto, so without this the row
+                pushes the page into horizontal scroll. */}
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+              <span className="flex min-w-0 flex-wrap items-center gap-2">
                 <span className="text-xs font-medium text-ink-100">
                   {outcome.mode === 'eip191' ? 'EIP-191 prefixed' : 'Raw digest'}
                 </span>

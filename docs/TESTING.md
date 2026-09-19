@@ -1,6 +1,6 @@
 # Testing
 
-**226 automated tests across three layers, all passing.** Every number below was produced by running the suites, not estimated.
+**278 automated tests across three layers, all passing.** Every number below was produced by running the suites, not estimated.
 
 ```
 npm run verify        # lint + typecheck + unit + contract + production build
@@ -81,7 +81,7 @@ Stated plainly rather than left for you to discover.
 | Not tested | Why |
 |---|---|
 | **On-chain verification against a deployed contract** | No contract is deployed (your decision), and **every Ethereum RPC is blocked from the sandbox this was built in** — `infura.io`, `rpc.sepolia.org`, `publicnode`, `alchemy` all refused at the egress proxy. The code path exists behind `NEXT_PUBLIC_MERKLE_VERIFIER_ADDRESS` and is **unverified by me**. Treat it as untested until you deploy and try it. |
-| **The live deployed URL** | Not deployed. Creating a Vercel project is forbidden for this session's credentials (HTTP 403, `You don't have permission to create the project`), and the inline-deploy tool is disabled server-side. See `docs/DEPLOYMENT.md`. Everything else was verified against the real production build locally. |
+| **The live deployed URL** | Not deployed yet. Two independent blockers, both needing a repository admin: creating a Vercel project is forbidden for this session's credentials (HTTP 403), and GitHub Pages cannot be switched on from a workflow (`Resource not accessible by integration`). See `docs/DEPLOYMENT.md`. Everything else is verified against the real production build, locally and in CI on `main`. |
 | **Wallet / MetaMask flows** | Deliberately absent. The app never asks for a wallet. |
 | **Real subgraph queries and FCM push** | Cut, and the Transfer Tracker says so on the page. |
 | **Cross-browser (Firefox, Safari/WebKit)** | Only Chromium is available in the build sandbox. The app uses no browser-specific APIs beyond `crypto.getRandomValues` and `navigator.clipboard`, and clipboard failures are already caught and ignored. Worth a manual check on Safari. |
@@ -93,3 +93,56 @@ Stated plainly rather than left for you to discover.
 `npm audit --omit=dev` reports **zero vulnerabilities** — nothing vulnerable ships to the browser.
 
 `npm audit` including dev dependencies reports 20, **all inside Hardhat 2's transitive tree** (`adm-zip`, `undici`, `tmp`, `serialize-javascript`, `ws`, and Hardhat's own `@metamask/eth-sig-util` chain). They are build-time only and never reach the deployed site. Clearing them means migrating to Hardhat 3, which is a different config format and test runner — deliberately out of scope here. This was 37 before the toolchain was updated.
+
+## Verifying a deployment
+
+The E2E suite is the deployment check, not a separate script:
+
+```bash
+BASE_URL=https://deathfire26.github.io/Merkle_Verif_BlockChain npm run test:e2e
+```
+
+When `BASE_URL` is set, Playwright starts no local server and drives the real
+site. All 100 checks apply unchanged — they assert on roles and text, never on
+host or port.
+
+**A bug this caught.** The suite navigated with absolute paths (`page.goto('/merkle')`).
+Playwright resolves those with `new URL(path, baseURL)`, and a leading slash
+replaces the *entire* path — so against `https://host/Merkle_Verif_BlockChain`
+every test silently loaded `https://host/merkle`, which does not exist. Run
+against the live project site, 96 of 100 checks failed on missing pages while
+the site itself was perfectly healthy.
+
+The fix is in two places: `playwright.config.ts` normalises `BASE_URL` to end in
+a slash, and `e2e/fixtures.ts` exposes `appPath()`, which strips the leading
+slash so paths resolve *under* the base path. Result against the deployed
+bundle: **100 passed (1.3m)**.
+
+This is worth stating plainly because it is the failure mode the whole suite
+exists to prevent — a verification step that reports green, or red, for reasons
+that have nothing to do with the thing being verified.
+
+## Differential testing against OpenZeppelin
+
+The `standard` leaf encoding claims to reproduce OpenZeppelin's
+`StandardMerkleTree`. Claims like that are exactly what this project does not
+take on trust, so `@openzeppelin/merkle-tree` is a dev dependency and
+`packages/core/src/leaves.test.ts` tests against the real thing.
+
+For leaf counts 1, 2, 3, 4, 5, 7, 8, 9, 16, 17, 31 and 64 it asserts:
+
+- the roots match;
+- every proof matches OpenZeppelin's element for element;
+- `StandardMerkleTree.verify` — OpenZeppelin's own verifier — accepts the proofs
+  this package generates.
+
+The odd counts are the point. The two schemes agree trivially on powers of two
+and diverge everywhere else, because OpenZeppelin builds a complete binary tree
+in a flat array while this project's own scheme pairs whole layers and promotes
+an unpaired node. A first attempt here matched only the leaf *hashing* and
+passed 1/2/4/8/16/64 while failing 3/5/7/9/17/31 — which is precisely the shape
+of bug that ships when a compatibility claim is asserted instead of tested.
+
+This sits alongside the existing TypeScript↔Solidity parity suite: two
+independent differential tests, one against this project's own contract, one
+against the library the ecosystem actually uses.

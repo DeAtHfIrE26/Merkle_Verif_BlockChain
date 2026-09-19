@@ -1,11 +1,13 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import {
-  buildMerkleTree,
+  buildEncodedTree,
   getProof,
-  hashLeaf,
   isInternalNode,
+  LEAF_ENCODINGS,
+  LeafEncodingError,
+  leafEncodingInfo,
   MerkleError,
   normalizeHex,
   processProof,
@@ -14,7 +16,9 @@ import {
   splitHexList,
   truncateHex,
   verifyProof,
+  type EncodedLeaf,
   type Hex,
+  type LeafEncoding,
   type MerkleTree,
 } from '@merkle-verify/core';
 import { Badge } from './Badge';
@@ -25,6 +29,15 @@ import { PageHeader, Panel } from './Section';
 import { TextAreaField } from './Field';
 import { VerdictPanel } from './VerdictPanel';
 import { onChainEnabled, merkleVerifierAddress } from '@/lib/config';
+import {
+  decodeShareState,
+  getSearchSnapshot,
+  getServerSearchSnapshot,
+  shareUrl,
+  subscribeToSearch,
+  type ShareState,
+} from '@/lib/share';
+import { cn } from '@/lib/cn';
 
 /** Above this, the SVG stops being readable and we render summary stats only. */
 const MAX_VISUALISED_LEAVES = 128;
@@ -32,6 +45,25 @@ const MAX_VISUALISED_LEAVES = 128;
 const MAX_LEAVES = 4096;
 
 const SAMPLE_INPUT = SAMPLE_TX_HASHES.join('\n');
+
+/**
+ * An allowlist shaped the way the address/amount encodings expect. Addresses
+ * are obviously synthetic so nobody mistakes them for real holders.
+ */
+const SAMPLE_ALLOWLIST = [
+  '0xA1b2C3d4E5f6A1b2C3d4E5f6A1b2C3d4E5f6A1b2, 1000',
+  '0xB2c3D4e5F6a1B2c3D4e5F6a1B2c3D4e5F6a1B2c3, 2500',
+  '0xC3d4E5f6A1b2C3d4E5f6A1b2C3d4E5f6A1b2C3d4, 750',
+  '0xD4e5F6a1B2c3D4e5F6a1B2c3D4e5F6a1B2c3D4e5, 12000',
+  '0xE5f6A1b2C3d4E5f6A1b2C3d4E5f6A1b2C3d4E5f6, 300',
+].join('\n');
+
+/** The starting point that makes sense for each encoding. */
+const SAMPLE_FOR: Record<LeafEncoding, string> = {
+  raw: SAMPLE_INPUT,
+  packed: SAMPLE_ALLOWLIST,
+  standard: SAMPLE_ALLOWLIST,
+};
 
 /** The human label for a sample hash, when the value is one of them. */
 function sampleLabelFor(value: string): string | null {
@@ -42,12 +74,30 @@ function sampleLabelFor(value: string): string | null {
 type BuildState =
   | { status: 'empty' }
   | { status: 'error'; message: string }
-  | { status: 'ready'; tree: MerkleTree; values: string[] };
+  | { status: 'ready'; tree: MerkleTree; leaves: readonly EncodedLeaf[] };
 
+/**
+ * Reads any shared tree out of the URL, then mounts the Explorer seeded with
+ * it. The `key` means a shared link -- or a back/forward navigation -- starts a
+ * clean Explorer rather than trying to reconcile two sets of state.
+ */
 export function MerkleExplorer() {
-  const [input, setInput] = useState(SAMPLE_INPUT);
-  const [selected, setSelected] = useState(0);
+  const search = useSyncExternalStore(
+    subscribeToSearch,
+    getSearchSnapshot,
+    getServerSearchSnapshot,
+  );
+  const shared = useMemo(() => decodeShareState(search), [search]);
+  return <Explorer key={search} shared={shared} />;
+}
+
+function Explorer({ shared }: { shared: Partial<ShareState> }) {
+  const [input, setInput] = useState(shared.values ?? SAMPLE_INPUT);
+  const [encoding, setEncoding] = useState<LeafEncoding>(shared.encoding ?? 'raw');
+  const [selected, setSelected] = useState(shared.index ?? 0);
   const [tamperedProof, setTamperedProof] = useState<string | null>(null);
+  const [copied, setCopied] = useState<'proof' | 'link' | null>(null);
+  const [shareError, setShareError] = useState<string | null>(null);
 
   const build = useMemo<BuildState>(() => {
     // Strip trailing `# comment` so the sample's labels are ignored.
@@ -65,17 +115,21 @@ export function MerkleExplorer() {
     }
 
     try {
-      return { status: 'ready', tree: buildMerkleTree(values.map(hashLeaf)), values };
+      const { tree, leaves } = buildEncodedTree(values, encoding);
+      return { status: 'ready', tree, leaves };
     } catch (error) {
+      if (error instanceof LeafEncodingError) {
+        return { status: 'error', message: error.message };
+      }
       return {
         status: 'error',
         message: error instanceof MerkleError ? error.message : 'Could not build a tree.',
       };
     }
-  }, [input]);
+  }, [input, encoding]);
 
   const tree = build.status === 'ready' ? build.tree : null;
-  const values = build.status === 'ready' ? build.values : [];
+  const leaves = build.status === 'ready' ? build.leaves : [];
   const leafCount = tree?.leaves.length ?? 0;
   const safeIndex = tree ? Math.min(selected, leafCount - 1) : 0;
 
@@ -121,6 +175,51 @@ export function MerkleExplorer() {
 
   const reset = useCallback(() => setTamperedProof(null), []);
 
+  const copy = useCallback(async (what: 'proof' | 'link', text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(what);
+      window.setTimeout(() => setCopied(null), 1600);
+    } catch {
+      // Clipboard access can be refused; say nothing rather than assert success.
+      setCopied(null);
+    }
+  }, []);
+
+  // Switching encoding while the box still holds an untouched sample swaps in
+  // the sample that fits, rather than dropping the visitor onto a parse error.
+  const changeEncoding = useCallback(
+    (next: LeafEncoding) => {
+      setEncoding((current) => {
+        setInput((text) => (text === SAMPLE_FOR[current] ? SAMPLE_FOR[next] : text));
+        return next;
+      });
+      setSelected(0);
+      reset();
+    },
+    [reset],
+  );
+
+  const copyProof = useCallback(() => {
+    void copy('proof', JSON.stringify(activeProof, null, 2));
+  }, [copy, activeProof]);
+
+  const copyLink = useCallback(() => {
+    const url = shareUrl({ values: input, encoding, index: safeIndex });
+    if (url === null) {
+      setShareError('This tree is too large to fit in a shareable link.');
+      window.setTimeout(() => setShareError(null), 4000);
+      return;
+    }
+    setShareError(null);
+    // Only on an explicit share. Mirroring every keystroke would turn the
+    // address bar into several hundred characters just for visiting the page,
+    // and replaceState does not fire popstate, so this cannot feed back into
+    // the store the shell reads.
+    window.history.replaceState(null, '', url);
+    void copy('link', url);
+  }, [copy, input, encoding, safeIndex]);
+
   return (
     <div className="mx-auto max-w-content px-4 py-10 sm:px-6">
       <PageHeader
@@ -129,7 +228,10 @@ export function MerkleExplorer() {
         description="A Merkle proof shows that one value belongs to a set, using only a handful of sibling hashes instead of the whole set. Build a tree below, pick a leaf, then break its proof on purpose."
         aside={
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setInput(SAMPLE_INPUT)}>
+            <Button variant="secondary" size="sm" onClick={copyLink}>
+              {copied === 'link' ? 'Link copied' : 'Share this tree'}
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => setInput(SAMPLE_FOR[encoding])}>
               Load sample
             </Button>
             <Button
@@ -146,12 +248,19 @@ export function MerkleExplorer() {
         }
       />
 
+      {shareError ? (
+        <p role="status" className="mb-4 text-xs text-warn-text">
+          {shareError}
+        </p>
+      ) : null}
+
       <div className="grid gap-5 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
         <div className="order-2 min-w-0 space-y-5 lg:order-none">
           <Panel
             title="Leaf values"
-            description="One per line. Hex is hashed by its bytes; anything else as UTF-8."
+            description="One per line. How each line becomes a leaf is up to the encoding below."
           >
+            <EncodingPicker value={encoding} onChange={changeEncoding} />
             <TextAreaField
               label="Values"
               rows={10}
@@ -161,10 +270,10 @@ export function MerkleExplorer() {
                 setInput(e.target.value);
                 reset();
               }}
-              placeholder={'0xabc…\nalice@example.com\nany string works'}
+              placeholder={leafEncodingInfo(encoding).placeholder}
               hint={
                 build.status === 'ready'
-                  ? `${leafCount} ${leafCount === 1 ? 'leaf' : 'leaves'} · ${tree!.layers.length} ${tree!.layers.length === 1 ? 'layer' : 'layers'}`
+                  ? `${leafCount} ${leafCount === 1 ? 'leaf' : 'leaves'} · ${tree!.layers.length} ${tree!.layers.length === 1 ? 'layer' : 'layers'}${leafEncodingInfo(encoding).reorders ? ' · ordered by hash, not by line' : ''}`
                   : 'Add at least one value to build a tree.'
               }
               error={build.status === 'error' ? build.message : null}
@@ -210,11 +319,11 @@ export function MerkleExplorer() {
                     Original value
                   </dt>
                   <dd className="break-all font-mono text-xs text-ink-300">
-                    {values[safeIndex]}
+                    {leaves[safeIndex]?.value}
                   </dd>
-                  {sampleLabelFor(values[safeIndex] ?? '') ? (
+                  {sampleLabelFor(leaves[safeIndex]?.value ?? '') ? (
                     <p className="mt-1 text-2xs text-ink-500">
-                      {sampleLabelFor(values[safeIndex] ?? '')}
+                      {sampleLabelFor(leaves[safeIndex]?.value ?? '')}
                     </p>
                   ) : null}
                 </div>
@@ -290,6 +399,14 @@ export function MerkleExplorer() {
                 description={`${activeProof.length} sibling ${activeProof.length === 1 ? 'hash' : 'hashes'} — enough to reach the root from this leaf.`}
                 actions={
                   <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={copyProof}
+                      disabled={activeProof.length === 0}
+                    >
+                      {copied === 'proof' ? 'Copied' : 'Copy proof'}
+                    </Button>
                     {isTampered ? (
                       <Button variant="secondary" size="sm" onClick={reset}>
                         Restore proof
@@ -342,13 +459,13 @@ export function MerkleExplorer() {
                         <dl className="space-y-1.5 text-2xs">
                           <div className="flex flex-wrap items-baseline gap-2">
                             <dt className="w-28 shrink-0 text-ink-500">Expected root</dt>
-                            <dd className="font-mono text-ink-300">
+                            <dd className="min-w-0 break-all font-mono text-ink-300">
                               {truncateHex(tree!.root, 14, 10)}
                             </dd>
                           </div>
                           <div className="flex flex-wrap items-baseline gap-2">
                             <dt className="w-28 shrink-0 text-ink-500">Computed root</dt>
-                            <dd className="font-mono text-invalid-text">
+                            <dd className="min-w-0 break-all font-mono text-invalid-text">
                               {verdict.computedRoot
                                 ? truncateHex(verdict.computedRoot, 14, 10)
                                 : 'not computable — a proof element is not 32 bytes'}
@@ -418,5 +535,60 @@ function EmptyState({ onLoadSample }: { onLoadSample: () => void }) {
         Load sample data
       </Button>
     </div>
+  );
+}
+
+/**
+ * Leaf encoding chooser.
+ *
+ * Each option shows its formula verbatim, because the only way to know which
+ * one you need is to match it against the line in your contract that hashes
+ * the leaf.
+ */
+function EncodingPicker({
+  value,
+  onChange,
+}: {
+  value: LeafEncoding;
+  onChange: (next: LeafEncoding) => void;
+}) {
+  return (
+    <fieldset className="mb-4">
+      <legend className="mb-2 text-2xs uppercase tracking-wider text-ink-500">
+        Leaf encoding
+      </legend>
+      <div className="space-y-2">
+        {LEAF_ENCODINGS.map((option) => {
+          const active = option.id === value;
+          return (
+            <label
+              key={option.id}
+              className={cn(
+                'flex cursor-pointer gap-2.5 rounded-lg border p-2.5 transition-colors',
+                active
+                  ? 'border-brand-border bg-brand-muted'
+                  : 'border-ink-700 bg-ink-900 hover:border-ink-600',
+              )}
+            >
+              <input
+                type="radio"
+                name="leaf-encoding"
+                value={option.id}
+                checked={active}
+                onChange={() => onChange(option.id)}
+                className="mt-0.5 shrink-0 accent-brand"
+              />
+              <span className="min-w-0">
+                <span className="block text-xs font-medium text-ink-100">{option.label}</span>
+                <span className="mt-0.5 block text-2xs text-ink-400">{option.hint}</span>
+                <code className="mt-1 block break-all font-mono text-2xs text-ink-500">
+                  {option.formula}
+                </code>
+              </span>
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }

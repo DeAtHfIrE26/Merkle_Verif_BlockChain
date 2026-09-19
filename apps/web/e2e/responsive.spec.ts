@@ -7,7 +7,11 @@ const PATHS = ['/', '/merkle', '/signatures', '/transfers', '/about'];
  * is the usual way a hash-heavy UI breaks on a narrow phone.
  */
 test.describe('responsive layout', () => {
-  for (const width of [360, 768, 1280]) {
+  // 320px is the narrowest phone still in use, and the margin matters: a
+  // recovered-address row once passed at 360px with 9px to spare and overflowed
+  // by 8px on CI, where the font metrics differ slightly. Checking 320 turns
+  // that kind of near-miss into a failure here rather than on someone's phone.
+  for (const width of [320, 360, 768, 1280]) {
     test(`no horizontal overflow at ${width}px`, async ({ page, consoleErrors }) => {
       await page.setViewportSize({ width, height: 900 });
       for (const path of PATHS) {
