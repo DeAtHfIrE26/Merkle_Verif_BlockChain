@@ -78,7 +78,7 @@ export function TransferTracker() {
         </p>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)]">
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)]">
         <Panel
           title="Incoming transfers"
           description={`Watching ${truncateHex(SIMULATED_TARGET_ADDRESS, 10, 8)}`}
