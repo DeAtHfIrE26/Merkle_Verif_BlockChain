@@ -295,7 +295,11 @@ function SignatureWorkbench({ onRegenerate }: { onRegenerate: () => void }) {
                 <dl className="space-y-1.5 text-2xs">
                   <div className="flex flex-wrap items-baseline gap-2">
                     <dt className="w-24 shrink-0 text-ink-500">Recovered</dt>
-                    <dd className="font-mono text-ink-300">{result.recovered}</dd>
+                    {/* A 42-character address is one unbreakable run. As a flex
+                        item it defaults to min-width:auto, so without min-w-0 and
+                        break-all it sets the row's floor and pushes a 360px
+                        viewport into horizontal scroll. */}
+                    <dd className="min-w-0 break-all font-mono text-ink-300">{result.recovered}</dd>
                   </div>
                 </dl>
               ) : null}
@@ -425,8 +429,12 @@ function ModeComparison({
                 : 'border-ink-700 bg-ink-900',
             )}
           >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="flex items-center gap-2">
+            {/* Both flex levels need min-w-0 and wrapping: the label plus its
+                "signed this way" badge is wider than a 360px card can hold, and
+                a flex item defaults to min-width:auto, so without this the row
+                pushes the page into horizontal scroll. */}
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+              <span className="flex min-w-0 flex-wrap items-center gap-2">
                 <span className="text-xs font-medium text-ink-100">
                   {outcome.mode === 'eip191' ? 'EIP-191 prefixed' : 'Raw digest'}
                 </span>

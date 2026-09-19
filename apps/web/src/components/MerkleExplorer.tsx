@@ -342,13 +342,13 @@ export function MerkleExplorer() {
                         <dl className="space-y-1.5 text-2xs">
                           <div className="flex flex-wrap items-baseline gap-2">
                             <dt className="w-28 shrink-0 text-ink-500">Expected root</dt>
-                            <dd className="font-mono text-ink-300">
+                            <dd className="min-w-0 break-all font-mono text-ink-300">
                               {truncateHex(tree!.root, 14, 10)}
                             </dd>
                           </div>
                           <div className="flex flex-wrap items-baseline gap-2">
                             <dt className="w-28 shrink-0 text-ink-500">Computed root</dt>
-                            <dd className="font-mono text-invalid-text">
+                            <dd className="min-w-0 break-all font-mono text-invalid-text">
                               {verdict.computedRoot
                                 ? truncateHex(verdict.computedRoot, 14, 10)
                                 : 'not computable — a proof element is not 32 bytes'}
